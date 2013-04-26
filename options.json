@@ -1,0 +1,20 @@
+
+
+{
+
+//    "serial" : "/dev/ttyACM0",
+    "serial" : "",
+    "conversion": 
+    {
+    	"positionCommand" : 
+    	{
+    		// moltiplicatore per trasformare i valori di posizione e forza dai valori scritti nel programma
+    		// ai vaori passati ad arduino
+	    	"positionFactor" : 4.995,
+	    	"forceFactor" : 1
+    	}
+    }
+    
+    
+}
+

@@ -1,0 +1,68 @@
+# Caro Aaron questo testo E' GIA UN PROGRAMMA
+# ------------------------------ CMD LINE structure
+# F DL <F limit>  max force difference
+# F LL <F limit> max sum of pressures on both ch
+# P DF <value>  max distance across platforms
+# <ch> <F>_<force>_<position>_<timelimit> [delta]
+# <ch> <P>_<position>_<timelimit> [maxforce]
+#
+# S N    la prima riga che e' terminata fa saltare la successiva
+#        (quando uno dei 2 ch finisce tronca l'altro)
+# S 0    attendi fino al completamento ch0
+# S 1    ...indovina...
+# S X    attendi fino a che entrambi non hanno finito
+#
+#     esempio:
+#0 F 150 400 50 10
+#1 P 200 60
+#S N
+#
+#  format:
+#  n F <force> <position> <timelimit> [delta]
+#   ranges:  force -99,99     position 0,999  timelimit 0,9999  delta -99,99
+#
+#  n P <lenght> <time>  [maxF1]
+#   ranges:  lenght 0-1023  pos1 0-1023   maxF1 0-99
+#
+#
+# nota che i valori seguenti probabilmente andranno convertiti in Kilogrammi e millimetri, quindi servira' valore di conversione
+#
+# la massima differenza di forza tra i 2 piedi --> NON SI PUO' SUPEARE MAI
+F DL 400
+#
+# il peso presunto (poi lo calcoleremo con precisione con verifica tramite  wii: piu forza di cosi non serve e ti solleva troppo
+F LL 3000
+#
+# massima distanza tra le pedane, se samo a 12bit il max e' 4095, poi lo convertiremo in max 200(millimetri) o anche subito se vuoi
+P DF 2000
+#
+#
+# ok, ora che abbiamo messo le sicurezze si comincia a sollevarti i 2 piedi e stare li 20 secondi con 50%forza
+# (per ora maxF= 1600 pari a circa 80Kg)
+0 P 100 5 1600
+1 P 100 15 1600
+#
+# alzo 0
+0 P 200 20 1600
+1 P 100 20 1600
+#
+# ora vorrei che il paz spingesse in basso il lato 0 fino a portarlo a altezza50
+# parto con forza 800 (circa 40Kg) gli do 30 secondi e poi lentamente se non ce la fa
+# riduco la spinta su 0 al ritmo di 0.1 Kg/sec  (circa 8 unita', forse)
+1 P 100 8 1600
+0 F 800 50 30 -8
+#
+# facciamo che nella peggiore ipotesi ci vorranno 50 +800/8 =150 secondi ma io non voglio fare il calcolo e gli metto un semaforo su tutto
+# FERMO fino a quando tutto completo
+S X
+#
+# ora  suppongo piede 1 su a 100 e 0 giu senza forza, ti dico TIENILO GIU E NON FARLO SALIRE PIU ALTO DELL ALTRO
+# e ti mando forza crescente
+# nota che se raggiungo la pos richiesta (100) il programma termina, oppre termina quando la forza 
+#ha raggiunto un LIMITE di quelli impostati di sicurezza o lo 0 a seconda del segno incremento
+1 P 100 10 1600
+0 F 0 100 20 40
+
+
+
+
