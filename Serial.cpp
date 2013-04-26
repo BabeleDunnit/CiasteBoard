@@ -46,7 +46,7 @@ bool Serial::Open(const string& serialName)
 	printf("fd opened as %i\n", fd);
 
 	/* wait for the Arduino to reboot */
-	usleep(3500000);
+	usleep(2000000);
 
 	/* get current serial port settings */
 	tcgetattr(fd, &toptions);
@@ -91,14 +91,24 @@ bool Serial::Open(const string& serialName)
 Serial::~Serial()
 {
 	// TODO Auto-generated destructor stub
+	close(fd);
 }
 
 int Serial::Write(const void* buf, size_t len)
 {
-	return (::write(fd, buf, len) == len);
+	// return 0;
+	boost::unique_lock<boost::mutex> scoped_lock(mutex);
+	int written = ::write(fd, buf, len);
+	// senza queste sleep si incarta tutto
+	usleep(240000);
+	return (written == len);
 }
 
 int Serial::Read(void* buf, size_t len)
 {
-	return ::read(fd, buf, len);
+	boost::unique_lock<boost::mutex> scoped_lock(mutex);
+	int nread = ::read(fd, buf, len);
+	// senza queste sleep si incarta tutto
+	usleep(20000);
+	return nread;
 }

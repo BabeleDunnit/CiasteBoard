@@ -6,20 +6,23 @@
  */
 
 #include "ProgramParser.h"
+#include "ProgramController.h"
+#include "Commands.h"
 
 #include<boost/tokenizer.hpp>
 #include<boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-// using namespace boost::;
 
 #include <iostream>
 #include <fstream>
 
 using namespace std;
 
-ProgramParser::ProgramParser()
+ProgramParser::ProgramParser(shared_ptr<ProgramController> pc) :
+		programController(pc)
 {
 	fdl = fll = pdf = -1;
+	commands.reset(new vector<shared_ptr<Command> >);
 }
 
 ProgramParser::~ProgramParser()
@@ -28,6 +31,7 @@ ProgramParser::~ProgramParser()
 
 bool ProgramParser::ParseProgram(const string& path)
 {
+	commands->clear();
 	ifstream program(path.c_str());
 	parsedLineNum = 0;
 	while (program)
@@ -37,7 +41,7 @@ bool ProgramParser::ParseProgram(const string& path)
 		++parsedLineNum;
 		string line(linebuf);
 		trim(line);
-		cout << "line read: " << parsedLineNum << " " << line << endl;
+		// cout << "line read: " << parsedLineNum << " " << line << endl;
 
 		// io AMO boost.
 		// boost::char_separator<char> sep;
@@ -53,8 +57,6 @@ bool ProgramParser::ParseProgram(const string& path)
 			// cout << "<" << *i << ">" << endl;
 		}
 
-
-
 		if (tokens.empty() || tokens[0][0] == '#')
 		{
 			// commento o linea vuota
@@ -63,7 +65,8 @@ bool ProgramParser::ParseProgram(const string& path)
 		{
 			if (fdl != -1)
 			{
-				cout << "ERROR: F DL set again at line " << parsedLineNum << endl;
+				cout << "ERROR: F DL set again at line " << parsedLineNum
+						<< endl;
 				return false;
 			}
 
@@ -80,7 +83,8 @@ bool ProgramParser::ParseProgram(const string& path)
 		{
 			if (fll != -1)
 			{
-				cout << "ERROR: F LL set again at line " << parsedLineNum << endl;
+				cout << "ERROR: F LL set again at line " << parsedLineNum
+						<< endl;
 				return false;
 			}
 
@@ -97,7 +101,8 @@ bool ProgramParser::ParseProgram(const string& path)
 		{
 			if (pdf != -1)
 			{
-				cout << "ERROR: P DF set again at line " << parsedLineNum << endl;
+				cout << "ERROR: P DF set again at line " << parsedLineNum
+						<< endl;
 				return false;
 			}
 
@@ -113,39 +118,42 @@ bool ProgramParser::ParseProgram(const string& path)
 		}
 		else if (tokens[1] == "f")
 		{
-			if(!ParseForceCommand(tokens))
+			if (!ParseForceCommand(tokens))
 				return false;
 		}
 		else if (tokens[1] == "p")
 		{
-			if(!ParsePositionCommand(tokens))
+			if (!ParsePositionCommand(tokens))
 				return false;
 		}
 		else if (tokens[0] == "s")
 		{
-			if(!ParseSemaphoreCommand(tokens))
+			if (!ParseSemaphoreCommand(tokens))
 				return false;
 		}
 		else
 		{
-			cout << "ERROR: unrecognized command at line " << parsedLineNum << endl;
+			cout << "ERROR: unrecognized command at line " << parsedLineNum
+					<< endl;
 			return false;
 		}
 
+		commands->back()->programController = programController;
 	}
 
-	commands.push_back(shared_ptr<Command>(new Command()));
+	// aggiungo un ultimo comando nullo - teoricamente un giorno non servira' piu'
+	commands->push_back(shared_ptr<Command>(new Command()));
 
-	cout << "Parsed " << commands.size() << " commands" << endl;
-	for(int i = 0; i < commands.size(); ++i)
-		cout << commands[i]->AsString() << endl;
+	cout << "Parsed " << commands->size() << " commands" << endl;
+	for (int i = 0; i < commands->size(); ++i)
+		cout << (*commands)[i]->AsString() << endl;
 
 	return true;
 }
 
 bool ProgramParser::ParseOptions(const string& path)
 {
-    read_json("options.json", options);
+	read_json("options.json", options);
 	return true;
 }
 
@@ -171,7 +179,7 @@ bool ProgramParser::ParseForceCommand(const vector<string>& tokens)
 		cmd = new ForceCommand(channel, force, position, timelimit);
 
 	shared_ptr<Command> fc(cmd);
-	commands.push_back(fc);
+	commands->push_back(fc);
 
 	return true;
 }
@@ -190,13 +198,14 @@ bool ProgramParser::ParsePositionCommand(const vector<string>& tokens)
 	int timelimit = lexical_cast<int>(tokens[3]);
 
 	Command* cmd = NULL;
-		if (tokens.size() > 4)
-			cmd = new PositionWithDeltaCommand(channel, position, timelimit, lexical_cast<int>(tokens[4]));
-		else
-			cmd = new PositionCommand(channel, position, timelimit);
+	if (tokens.size() > 4)
+		cmd = new PositionWithMaxForceCommand(channel, position, timelimit,
+				lexical_cast<int>(tokens[4]));
+	else
+		cmd = new PositionCommand(channel, position, timelimit);
 
 	shared_ptr<Command> pc(cmd);
-	commands.push_back(pc);
+	commands->push_back(pc);
 
 	return true;
 }
@@ -205,8 +214,9 @@ bool ProgramParser::ParseSemaphoreCommand(const vector<string>& tokens)
 {
 	assert(tokens[0] == "s");
 	shared_ptr<Command> sc(new SemaphoreCommand(tokens[1]));
-	commands.push_back(sc);
+	commands->push_back(sc);
 
 	return true;
 }
+
 

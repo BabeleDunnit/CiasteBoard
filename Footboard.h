@@ -16,21 +16,22 @@
 #include "Actuator.h"
 // #include "ProgramController.h"
 
-/*
+
 struct ArduinoState
 {
 	int channel; // 0 o 1
 	int force;
 	int position;
 };
-*/
+
 
 class Command;
+class ProgramController;
 
 class Footboard
 {
 public:
-	Footboard(void);
+	Footboard(shared_ptr<ProgramController> pc);
 	virtual ~Footboard();
 
 	bool GetStateFromArduino(void);
@@ -43,11 +44,18 @@ public:
 
 	Serial serial;
 
-	// circular_buffer<ArduinoState> states[2];
-	// Actuator actuators[2];
+	// only for debug purposes
+	circular_buffer<ArduinoState> states;
+
 	vector<Actuator> actuators;
 
 	char readBuffer[64];
+
+	// letti da json
+    float positionCommandPositionConversionFactor;
+    float positionCommandForceConversionFactor;
+
+    shared_ptr<ProgramController> programController;
 };
 
 #endif /* ARDUINOCOMMANDER_H_ */

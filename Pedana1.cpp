@@ -17,6 +17,7 @@
 //#include "ArduinoCommander.h"
 //#include "ProgramParser.h"
 #include "ProgramController.h"
+#include "ProgramParser.h"
 
 int main(void)
 {
@@ -102,11 +103,24 @@ int main(void)
 //    setlocale (LC_ALL, "C.UTF-8");
 //    locale loc("C.UTF-8");
 
-	ProgramController controller;
-	controller.parser.ParseProgram("testprogram.txt");
-    controller.parser.ParseOptions("options.json");
-    cout << "Arduino expected on serial " << controller.parser.options.get<string>("serial") << endl;
-	controller.Run();
+	shared_ptr<ProgramController> controller(new ProgramController);
+	controller->Init();
+//	controller->parser->ParseProgram("program.ftb");
+//    controller->parser->ParseOptions("options.json");
+
+    string serialName = controller->parser->options.get<string>("serial");
+    if(serialName.length())
+    {
+		cout << "Arduino expected on serial " << serialName << endl;
+		controller->footboard->serial.Open(serialName);
+	    usleep(15000000);
+    }
+
+    for(int i = 0; i < 8; i++)
+    	controller->footboard->GetStateFromArduino();
+
+    cout << "Execution Start!" << endl;
+	controller->Run();
 
 	cout << "Program End" << endl;
 

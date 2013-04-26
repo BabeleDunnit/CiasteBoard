@@ -11,6 +11,9 @@
 #include <string>
 using namespace std;
 
+#include <boost/thread/mutex.hpp>
+using namespace boost;
+
 class Serial
 {
 public:
@@ -22,6 +25,7 @@ public:
 	int Read(void* buf, size_t len);
 
 	int fd;
+	boost::mutex mutex;
 };
 
 #endif /* ARDUINOSERIAL_H_ */

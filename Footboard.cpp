@@ -12,13 +12,23 @@ using namespace boost;
 
 #include "Footboard.h"
 #include "ProgramController.h"
+#include "Commands.h"
 
-Footboard::Footboard(void)
+Footboard::Footboard(shared_ptr<ProgramController> pc) :
+		programController(pc)
 {
 	// TODO Auto-generated constructor stub
-//	states[0].resize(50);
-//	states[1].resize(50);
+	states.resize(2);
 	actuators.resize(2);
+
+
+	positionCommandPositionConversionFactor =
+			programController->parser->options.get<float>("conversion.positionCommand.positionFactor");
+	positionCommandForceConversionFactor =
+			programController->parser->options.get<float>("conversion.positionCommand.forceFactor");
+
+	// cout << programController->parser->options.get<float>("c1");
+
 }
 
 Footboard::~Footboard()
@@ -43,7 +53,7 @@ bool Footboard::GetStateFromArduino(void)
 	int channel = -1, force = -1, position = -1;
 //	sscanf(readBuffer, "%d %d %d", &state.channel, &state.force,
 //			&state.position);
-    sscanf(readBuffer, "%d %d %d", &channel, &force, &position);
+	sscanf(readBuffer, "%d %d %d", &channel, &force, &position);
 
 	// cout << state.channel << state.force << state.position << endl;
 
@@ -57,7 +67,13 @@ bool Footboard::GetStateFromArduino(void)
 	if (position < MINPOSITIONVALUE || position > MAXPOSITIONVALUE)
 		return false;
 
-	// states[state.channel].push_back(state);
+	// salvo i dati solo per stamparli ogni tanto, il flusso vero e' quello che entra negli attuatori
+	ArduinoState state;
+	state.channel = channel;
+	state.force = force;
+	state.position = position;
+	states.push_back(state);
+
 	actuators[channel].AddState(force, position);
 
 //	int sum = 0;
@@ -73,22 +89,21 @@ bool Footboard::GetStateFromArduino(void)
 }
 
 /*
-string ArduinoCommander::getLastStateString(const int& channel)
-{
-	ArduinoState& ls = states[channel].back();
-	return lexical_cast<string>(ls.channel) + " "
-			+ lexical_cast<string>(ls.force) + " "
-			+ lexical_cast<string>(ls.position);
-}
-*/
+ string ArduinoCommander::getLastStateString(const int& channel)
+ {
+ ArduinoState& ls = states[channel].back();
+ return lexical_cast<string>(ls.channel) + " "
+ + lexical_cast<string>(ls.force) + " "
+ + lexical_cast<string>(ls.position);
+ }
+ */
 
-bool Footboard::SendForceCommandToArduino(const int& channel,
-		const int& force, const int& maxForce)
+bool Footboard::SendForceCommandToArduino(const int& channel, const int& force,
+		const int& maxForce)
 {
 //	string command = lexical_cast<string>(channel) + " " + lexical_cast<string>(force)
 //			+ " " + lexical_cast<string>(maxForce) + lexical_cast<string>(13) + lexical_cast<string>(10);
-	if(force < -999 || force > 999 ||
-			maxForce < -99 || maxForce > 99 )
+	if (force < -999 || force > 999 || maxForce < -99 || maxForce > 99)
 	{
 		cout << "warn: force command params out of bounds" << endl;
 		return false;
@@ -105,42 +120,30 @@ bool Footboard::SendForceCommandToArduino(const int& channel,
 	return (bytesSent != -1);
 }
 
-bool Footboard::SendPositionCommandToArduino(const int& channel,
-		const int& position, const int& maxForceToGetToPosition)
+bool Footboard::SendPositionCommandToArduino(const int& channel_,
+		const int& position_, const int& maxForceToGetToPosition_)
 {
+	int arduinoPosition = position_ * positionCommandPositionConversionFactor;
+	int arduinoForce = maxForceToGetToPosition_ * positionCommandForceConversionFactor;
 
-	if(position < 0 || position > 999 ||
-			maxForceToGetToPosition < -99 || maxForceToGetToPosition > 99 )
+	if (arduinoPosition < 0 || arduinoPosition > 999 || arduinoForce < -99
+			|| arduinoForce > 99)
 	{
-		cout << "warn: position command params out of bounds" << endl;
+		cout << "warn: position command params out of bounds after conversion: pos:" << arduinoPosition << " force:" << arduinoForce << endl;
 		return false;
 	}
 
-
-//	bool shooted = actuators[channel].positionPID.setTargetValue(position);
-//	if(shooted)
-//
-//	    fare oggetto alto che parsa e fa girare il prog e parla con pid, pid chiama questo
-
-
-	/*
-	 string command = "P" + lexical_cast<string>(channel) + " " + lexical_cast<string>(position)
-	 + " " + lexical_cast<string>(maxForceToGetToPosition) + lexical_cast<string>(13) + lexical_cast<string>(10);
-	 // cout << "sending " << command << endl;
-	 int bytesSent = arduinoSerial.write(command.c_str(), command.length());
-	 //usleep(100000);
-	 return (bytesSent != -1);
-	 */
-
 	char buf[64];
-	sprintf(buf, "P %1d %03d %02d\r\n", channel, position,
-			maxForceToGetToPosition);
-	// cout << buf << endl;
+	sprintf(buf, "P %1d %03d %02d\r\n", channel_, arduinoPosition,
+			arduinoForce);
+
+	assert(buf[12]==0);
+	assert(strlen(buf)==12);
+
+	cout << "sending command to arduino: " << buf << endl;
 
 	int bytesSent = serial.Write(buf, strlen(buf));
-	// usleep(100000);
-	// assert(bytesSent == command.length());
-	// cout << bytesSent << endl;
+
 	return (bytesSent != -1);
 
 }
@@ -148,11 +151,18 @@ bool Footboard::SendPositionCommandToArduino(const int& channel,
 bool Footboard::Accept(shared_ptr<Command> c)
 {
 	int channel = c->GetChannel();
-	if(channel != -1)
+	if (channel != -1)
 	{
 		return actuators[channel].Accept(c);
 	}
-	else
+//	else
+//	{
+//		cout << "Footboard accepts command: " << c->AsString() << endl;
+//		return true;
+//	}
+
+	// per ora abbiamo solo il comando S X
+	if (c->IsExpired())
 	{
 		cout << "Footboard accepts command: " << c->AsString() << endl;
 		return true;

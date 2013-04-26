@@ -16,8 +16,9 @@
 // using namespace boost::date_time;
 using namespace boost::posix_time;
 
+#include <boost/enable_shared_from_this.hpp>
 
-class ProgramController
+class ProgramController : public enable_shared_from_this<ProgramController>
 {
 public:
     ProgramController();
@@ -27,15 +28,22 @@ public:
     void Stop(void) { running = false; }
     bool running;
 
-    ProgramParser parser;
-    Footboard footboard;
+    bool Init(void);
+
+    shared_ptr<ProgramParser> parser;
+    shared_ptr<Footboard> footboard;
 
     // bool ExecuteNextCommand(void);
-    vector<shared_ptr<Command> >& commands;
+    shared_ptr<vector<shared_ptr<Command> > > commands;
     int programCounter;
 
     ptime loopTime;
     time_duration deltaT;
+    ptime lastInfoTime;
+    ptime startTime;
+
+    // float positionCommandPositionConversionFactor;
+    // float positionCommandForceConversionFactor;
 
 
 };

@@ -6,15 +6,19 @@
  */
 
 #include "ProgramController.h"
+#include "ProgramParser.h"
+#include "Commands.h"
+#include "Footboard.h"
 
 //#include <boost/date_time/posix_time/posix_time.hpp>
 //#include <boost/thread.hpp>
 
 ProgramController::ProgramController() :
-		running(true), commands(parser.commands), programCounter(0)
+		running(true), programCounter(0)
 {
+
 	// TODO Auto-generated constructor stub
-	loopTime = boost::posix_time::microsec_clock::local_time();
+	loopTime = lastInfoTime = boost::posix_time::microsec_clock::local_time();
 }
 
 ProgramController::~ProgramController()
@@ -36,6 +40,8 @@ bool ProgramController::Run(void)
 //    boost::posix_time::time_duration msdiff = mst2 - mst1;
 //    std::cout << msdiff.total_milliseconds() << std::endl;
 
+	startTime = boost::posix_time::microsec_clock::local_time();
+
 	while (running)
 	{
 
@@ -46,22 +52,48 @@ bool ProgramController::Run(void)
 		// cout << deltaT.total_microseconds() << endl;
 
 		// leggo lo stato della pedana
-		footboard.GetStateFromArduino();
+		footboard->GetStateFromArduino();
 
-		shared_ptr<Command> nextCommand = commands[programCounter];
-		if (footboard.Accept(nextCommand))
+		// una volta ogni tanto stampo gli ultimi dati letti cosi' per gradire
+		if((timeNow - lastInfoTime).total_microseconds() >= 1000000)
+		{
+			cout << "time: " << (timeNow - startTime).total_microseconds() / 1000000.0;
+			cout << " info arduino:";
+			for(circular_buffer<ArduinoState>::iterator i = footboard->states.begin(); i != footboard->states.end(); ++i)
+			{
+				cout << " ch:" << i->channel << " f:" << i->force << " p:" << i->position;
+			}
+			cout << endl;
+			lastInfoTime = timeNow;
+		}
+
+		shared_ptr<Command> nextCommand = (*commands)[programCounter];
+		// cout << "exec command " << nextCommand->AsString() << endl;
+		if (footboard->Accept(nextCommand))
 		{
 			cout << "Accepted command: " << nextCommand->AsString() << endl;
 			++programCounter;
-			if (programCounter >= commands.size())
+			if (programCounter >= commands->size())
 			{
 				cout << "Exiting main loop" << endl;
 				running = false;
 			}
 		}
 
+
 	}
 
 	return true;
 }
+
+bool ProgramController::Init(void)
+{
+	parser.reset(new ProgramParser(shared_from_this()));
+	parser->ParseProgram("program.ftb");
+    parser->ParseOptions("options.json");
+	footboard.reset(new Footboard(shared_from_this()));
+	commands = parser->commands;
+	return true;
+}
+
 
