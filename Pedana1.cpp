@@ -99,9 +99,13 @@ int main(void)
 //	ProgramParser pp;
 //	pp.ParseProgram("testprogram.txt");
 //	pp.ParseOptions("testoptions.properties");
+//    setlocale (LC_ALL, "C.UTF-8");
+//    locale loc("C.UTF-8");
 
 	ProgramController controller;
 	controller.parser.ParseProgram("testprogram.txt");
+    controller.parser.ParseOptions("options.json");
+    cout << "Arduino expected on serial " << controller.parser.options.get<string>("serial") << endl;
 	controller.Run();
 
 	cout << "Program End" << endl;

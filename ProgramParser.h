@@ -16,6 +16,9 @@ using namespace std;
 #include <boost/lexical_cast.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 using namespace boost::posix_time;
+#include <boost/property_tree/json_parser.hpp>
+using namespace boost::property_tree;
+
 using namespace boost;
 
 struct Command
@@ -152,6 +155,9 @@ public:
 	vector<shared_ptr<Command> > commands;
 
 	int parsedLineNum;
+
+    ptree options;
+
 };
 
 #endif /* PROGRAMPARSER_H_ */
