@@ -7,7 +7,6 @@
 
 #include "Actuator.h"
 #include "ProgramParser.h"
-#include "Commands.h"
 
 #include <iostream>
 using namespace std;
@@ -32,13 +31,12 @@ bool Actuator::Accept(shared_ptr<Command> c)
 	// i parametri specificati dal parametro attuale o se e' scaduto il timeout
 	// bool targetReached;
 
-	if (!actualCommand || actualCommand->IsExpired())
-// 		|| (microsec_clock::local_time() - actualCommand->acceptTime).total_seconds() > 5)
+	if (!actualCommand
+		|| (microsec_clock::local_time() - actualCommand->acceptTime).total_seconds() > 5)
 	{
 		cout << "Actuator accepts command: " << c->AsString() << endl;
 		actualCommand = c;
 		actualCommand->acceptTime = microsec_clock::local_time();
-		actualCommand->Execute();
 		return true;
 	}
 
@@ -58,18 +56,3 @@ bool Actuator::AddState(const int& force, const int& position)
 	previousPIDValue = PIDValue;
 	return shooting;
 }
-
-bool Actuator::IsCommandExpired(void)
-{
-	return !actualCommand || actualCommand->IsExpired();
-}
-
-bool Actuator::KillCommand(void)
-{
-	if(actualCommand)
-		return actualCommand->Kill();
-
-	return true;
-}
-
-

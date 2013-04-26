@@ -22,14 +22,9 @@
 
 #define BAUDRATE B38400
 
-#include "Serial.h"
+#include "ArduinoSerial.h"
 
-Serial::Serial(void)
-{
-	fd = -1;
-}
-
-bool Serial::Open(const string& serialName)
+ArduinoSerial::ArduinoSerial(const string& serialName)
 {
 	// int fd, n, i;
 	// char buf[64] = "temp text";
@@ -39,7 +34,7 @@ bool Serial::Open(const string& serialName)
 	fd = open(serialName.c_str(), O_RDWR | O_NOCTTY);
 	if(fd < 0)
 	{
-		cout << "ERROR opening Arduino port:" << serialName << endl;
+		cout << "error opening Arduino port" << endl;
 		exit(-1);
 	}
 
@@ -85,20 +80,19 @@ bool Serial::Open(const string& serialName)
 */
 
 	// return 0;
-	return true;
 }
 
-Serial::~Serial()
+ArduinoSerial::~ArduinoSerial()
 {
 	// TODO Auto-generated destructor stub
 }
 
-int Serial::Write(const void* buf, size_t len)
+int ArduinoSerial::Write(const void* buf, size_t len)
 {
 	return (::write(fd, buf, len) == len);
 }
 
-int Serial::Read(void* buf, size_t len)
+int ArduinoSerial::Read(void* buf, size_t len)
 {
 	return ::read(fd, buf, len);
 }

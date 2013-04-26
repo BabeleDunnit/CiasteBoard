@@ -41,18 +41,14 @@ public:
 
 	bool AddState(const int& force, const int& position);
 
-	bool IsCommandExpired(void);
-	bool KillCommand(void); //  { if(actualCommand) actualCommand->Kill(); }
-
 	PID positionPID;
 
 	int previousPIDValue;
 	int PIDValue;
 
-private:
-	// il comando puo' essere nullo, e voglio astrarre che un comando nullo e' da considerarsi "expired"
-	// nel senso che possiamo immediatamente caricare il comando successivo. Quindi lo metto privato
-	// e sposto i check nell'interfaccia dell'actuator
+	// l'attuatore si e' allineato con il comando attuale?
+	// bool actualCommandReached;
+
 	shared_ptr<Command> actualCommand;
 
 };

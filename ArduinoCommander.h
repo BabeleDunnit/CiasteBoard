@@ -12,9 +12,8 @@
 //using namespace std;
 #include <boost/circular_buffer.hpp>
 
-#include "Serial.h"
+#include "ArduinoSerial.h"
 #include "Actuator.h"
-// #include "ProgramController.h"
 
 /*
 struct ArduinoState
@@ -25,13 +24,11 @@ struct ArduinoState
 };
 */
 
-class Command;
-
-class Footboard
+class ArduinoCommander
 {
 public:
-	Footboard(void);
-	virtual ~Footboard();
+	ArduinoCommander(const ArduinoSerial&);
+	virtual ~ArduinoCommander();
 
 	bool GetStateFromArduino(void);
 	// string getLastStateString(const int& channel);
@@ -39,13 +36,10 @@ public:
 	bool SendForceCommandToArduino(const int& channel, const int& force, const int& maxForce);
 	bool SendPositionCommandToArduino(const int& channel, const int& position, const int& maxForceToGetToPosition);
 
-	bool Accept(shared_ptr<Command>);
-
-	Serial serial;
+	ArduinoSerial arduinoSerial;
 
 	// circular_buffer<ArduinoState> states[2];
-	// Actuator actuators[2];
-	vector<Actuator> actuators;
+	Actuator actuators[2];
 
 	char readBuffer[64];
 };

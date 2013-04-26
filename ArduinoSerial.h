@@ -11,13 +11,12 @@
 #include <string>
 using namespace std;
 
-class Serial
+class ArduinoSerial
 {
 public:
-	Serial(void);
-	virtual ~Serial();
+	ArduinoSerial(const string& serialName);
+	virtual ~ArduinoSerial();
 
-	bool Open(const string& serialName);
 	int Write(const void* buf, size_t len);
 	int Read(void* buf, size_t len);
 

@@ -10,18 +10,17 @@
 #include <boost/lexical_cast.hpp>
 using namespace boost;
 
-#include "Footboard.h"
-#include "ProgramController.h"
+#include "ArduinoCommander.h"
 
-Footboard::Footboard(void)
+ArduinoCommander::ArduinoCommander(const ArduinoSerial& as) :
+		arduinoSerial(as)
 {
 	// TODO Auto-generated constructor stub
 //	states[0].resize(50);
 //	states[1].resize(50);
-	actuators.resize(2);
 }
 
-Footboard::~Footboard()
+ArduinoCommander::~ArduinoCommander()
 {
 	// TODO Auto-generated destructor stub
 }
@@ -31,11 +30,11 @@ Footboard::~Footboard()
 #define MAXFORCEVALUE 4095
 #define MAXPOSITIONVALUE 4095
 
-bool Footboard::GetStateFromArduino(void)
+bool ArduinoCommander::GetStateFromArduino(void)
 {
 	// leggo robba
 	// char buf[64];
-	int len = serial.Read(readBuffer, 64);
+	int len = arduinoSerial.Read(readBuffer, 64);
 	readBuffer[len] = 0;
 	// cout << buf << endl;
 	// provo a parsare
@@ -82,7 +81,7 @@ string ArduinoCommander::getLastStateString(const int& channel)
 }
 */
 
-bool Footboard::SendForceCommandToArduino(const int& channel,
+bool ArduinoCommander::SendForceCommandToArduino(const int& channel,
 		const int& force, const int& maxForce)
 {
 //	string command = lexical_cast<string>(channel) + " " + lexical_cast<string>(force)
@@ -98,14 +97,14 @@ bool Footboard::SendForceCommandToArduino(const int& channel,
 	sprintf(buf, "%1d %03d %02d\r\n", channel, force, maxForce);
 	// cout << buf << endl;
 
-	int bytesSent = serial.Write(buf, strlen(buf));
+	int bytesSent = arduinoSerial.Write(buf, strlen(buf));
 	// usleep(100000);
 	// assert(bytesSent == command.length());
 	// cout << bytesSent << endl;
 	return (bytesSent != -1);
 }
 
-bool Footboard::SendPositionCommandToArduino(const int& channel,
+bool ArduinoCommander::SendPositionCommandToArduino(const int& channel,
 		const int& position, const int& maxForceToGetToPosition)
 {
 
@@ -137,27 +136,10 @@ bool Footboard::SendPositionCommandToArduino(const int& channel,
 			maxForceToGetToPosition);
 	// cout << buf << endl;
 
-	int bytesSent = serial.Write(buf, strlen(buf));
+	int bytesSent = arduinoSerial.Write(buf, strlen(buf));
 	// usleep(100000);
 	// assert(bytesSent == command.length());
 	// cout << bytesSent << endl;
 	return (bytesSent != -1);
 
 }
-
-bool Footboard::Accept(shared_ptr<Command> c)
-{
-	int channel = c->GetChannel();
-	if(channel != -1)
-	{
-		return actuators[channel].Accept(c);
-	}
-	else
-	{
-		cout << "Footboard accepts command: " << c->AsString() << endl;
-		return true;
-	}
-
-	return false;
-}
-
