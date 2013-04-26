@@ -40,6 +40,7 @@ bool ProgramController::Run(void)
 //    boost::posix_time::time_duration msdiff = mst2 - mst1;
 //    std::cout << msdiff.total_milliseconds() << std::endl;
 
+    // cout.precision(4);
 	startTime = boost::posix_time::microsec_clock::local_time();
 
 	while (running)
@@ -49,15 +50,16 @@ bool ProgramController::Run(void)
 		deltaT = timeNow - loopTime;
 		loopTime = timeNow;
 
-		// cout << deltaT.total_microseconds() << endl;
-
 		// leggo lo stato della pedana
 		footboard->GetStateFromArduino();
+
+		double elapsedTime = (timeNow - startTime).total_microseconds() / 1000000.0;
 
 		// una volta ogni tanto stampo gli ultimi dati letti cosi' per gradire
 		if((timeNow - lastInfoTime).total_microseconds() >= 1000000)
 		{
-			cout << "time: " << (timeNow - startTime).total_microseconds() / 1000000.0;
+			// cout << "time: " << (timeNow - startTime).total_microseconds() / 1000000.0;
+            cout << "time: " << fixed << setprecision(2) << setw(7) << elapsedTime;
 			cout << " info arduino:";
 			for(circular_buffer<ArduinoState>::iterator i = footboard->states.begin(); i != footboard->states.end(); ++i)
 			{
@@ -71,7 +73,8 @@ bool ProgramController::Run(void)
 		// cout << "exec command " << nextCommand->AsString() << endl;
 		if (footboard->Accept(nextCommand))
 		{
-			cout << "Accepted command: " << nextCommand->AsString() << endl;
+			cout << "time: " << elapsedTime << " - Executed command: " << nextCommand->AsString()
+			<< endl << "------ command end ------\n" << endl;
 			++programCounter;
 			if (programCounter >= commands->size())
 			{

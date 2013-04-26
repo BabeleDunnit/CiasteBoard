@@ -35,7 +35,7 @@ bool Actuator::Accept(shared_ptr<Command> c)
 	if (!actualCommand || actualCommand->IsExpired())
 // 		|| (microsec_clock::local_time() - actualCommand->acceptTime).total_seconds() > 5)
 	{
-		cout << "Actuator accepts command: " << c->AsString() << endl;
+		cout << "\n----- command start -----\n" << "Actuator accepts command: " << c->AsString() << endl;
 		actualCommand = c;
 		actualCommand->acceptTime = microsec_clock::local_time();
 		actualCommand->Execute();

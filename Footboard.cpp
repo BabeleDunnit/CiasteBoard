@@ -5,9 +5,9 @@
  *      Author: babele
  */
 #include <stdio.h>
-// #include <numeric>
 #include <assert.h>
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 using namespace boost;
 
 #include "Footboard.h"
@@ -120,6 +120,8 @@ bool Footboard::SendForceCommandToArduino(const int& channel, const int& force,
 	return (bytesSent != -1);
 }
 
+char arduinoCommandBuffer[64];
+
 bool Footboard::SendPositionCommandToArduino(const int& channel_,
 		const int& position_, const int& maxForceToGetToPosition_)
 {
@@ -130,19 +132,22 @@ bool Footboard::SendPositionCommandToArduino(const int& channel_,
 			|| arduinoForce > 99)
 	{
 		cout << "warn: position command params out of bounds after conversion: pos:" << arduinoPosition << " force:" << arduinoForce << endl;
+		cout << "will NOT send command to Arduino" << endl;
 		return false;
 	}
 
-	char buf[64];
-	sprintf(buf, "P %1d %03d %02d\r\n", channel_, arduinoPosition,
+	sprintf(arduinoCommandBuffer, "P %1d %03d %02d\r\n", channel_, arduinoPosition,
 			arduinoForce);
 
-	assert(buf[12]==0);
-	assert(strlen(buf)==12);
+    // riformatto un pelo, evito eoln multipli
+    string command(arduinoCommandBuffer);
+    trim_right(command);
+	cout << "Footboard sending string to arduino: '" << command << "\\r\\n'" << endl;
 
-	cout << "sending command to arduino: " << buf << endl;
+	assert(arduinoCommandBuffer[12]==0);
+    assert(strlen(arduinoCommandBuffer)==12);
+    int bytesSent = serial.Write(arduinoCommandBuffer, strlen(arduinoCommandBuffer));
 
-	int bytesSent = serial.Write(buf, strlen(buf));
 
 	return (bytesSent != -1);
 
@@ -164,7 +169,7 @@ bool Footboard::Accept(shared_ptr<Command> c)
 	// per ora abbiamo solo il comando S X
 	if (c->IsExpired())
 	{
-		cout << "Footboard accepts command: " << c->AsString() << endl;
+		cout << "\n----- command start -----\n" << "Footboard accepts command: " << c->AsString() << endl;
 		return true;
 	}
 

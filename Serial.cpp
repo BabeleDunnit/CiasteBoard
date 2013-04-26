@@ -96,7 +96,12 @@ Serial::~Serial()
 
 int Serial::Write(const void* buf, size_t len)
 {
-	// return 0;
+    if(fd == -1)
+    {
+        // cout << "(no arduino, skipping write)" << endl;
+        return 1;
+    }
+
 	boost::unique_lock<boost::mutex> scoped_lock(mutex);
 	int written = ::write(fd, buf, len);
 	// senza queste sleep si incarta tutto
@@ -106,7 +111,13 @@ int Serial::Write(const void* buf, size_t len)
 
 int Serial::Read(void* buf, size_t len)
 {
-	boost::unique_lock<boost::mutex> scoped_lock(mutex);
+    if(fd == -1)
+    {
+        // cout << "(no arduino, skipping read)" << endl;
+        return 1;
+    }
+
+    boost::unique_lock<boost::mutex> scoped_lock(mutex);
 	int nread = ::read(fd, buf, len);
 	// senza queste sleep si incarta tutto
 	usleep(20000);

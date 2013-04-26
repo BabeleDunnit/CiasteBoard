@@ -19,6 +19,8 @@
 #include "ProgramController.h"
 #include "ProgramParser.h"
 
+// attualmente salvato come pedana1.4 in dropbox/projects/ciaste
+
 int main(void)
 {
 
