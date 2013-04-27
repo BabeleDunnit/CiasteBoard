@@ -12,6 +12,8 @@
 #include <iostream>
 using namespace std;
 
+// commento aggiunto direttamente su github
+
 Actuator::Actuator()
 {
 	// TODO Auto-generated constructor stub
