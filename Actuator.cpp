@@ -13,6 +13,7 @@
 using namespace std;
 
 // commento aggiunto direttamente su github
+// commento aggiunto su mac
 
 Actuator::Actuator()
 {
