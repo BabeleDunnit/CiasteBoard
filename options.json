@@ -2,31 +2,18 @@
 
 {
 
-    "serial" : "/dev/ttyACM0",
-//     "serial" : "",
+//    "serial" : "/dev/ttyACM0",
+    "serial" : "",
     "conversion": 
     {
-    	"positionCommand" : 
-    	{
-    		// moltiplicatore per trasformare i valori di posizione e forza dai valori scritti nel programma
+    		// moltiplicatore per trasformare i valori di posizione e forza 
+    		// dai valori scritti nel programma lato host
     		// ai valori passati ad arduino
     		// int arduinoPosition = position_ * positionCommandPositionConversionFactor;
 			// int arduinoForce = maxForceToGetToPosition_ * positionCommandForceConversionFactor;
     		
 	    	"positionFactor" : 1.0,
 	    	"forceFactor" : 1.0
-    	},
-    	
-    	"forceCommand" : 
-    	{
-    		// moltiplicatore per trasformare i valori di posizione e forza dai valori scritti nel programma
-    		// ai valori passati ad arduino
-    		// int arduinoPosition = position_ * positionCommandPositionConversionFactor;
-			// int arduinoForce = maxForceToGetToPosition_ * positionCommandForceConversionFactor;
-    		
-	    	"positionFactor" : 1.0,
-	    	"forceFactor" : 1.0
-    	}
     }
     
     

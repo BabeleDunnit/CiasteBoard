@@ -20,10 +20,8 @@ Footboard::Footboard(shared_ptr<ProgramController> pc) :
 	//states.resize(3);
 	actuators.resize(2);
 
-	positionCommandPositionConversionFactor =
-			programController->parser->options.get<float>("conversion.positionCommand.positionFactor");
-	positionCommandForceConversionFactor =
-			programController->parser->options.get<float>("conversion.positionCommand.forceFactor");
+	positionConversionFactor = programController->parser->options.get<float>("conversion.positionFactor");
+	forceConversionFactor = programController->parser->options.get<float>("conversion.forceFactor");
 
 	memset(readBuffer, 0, sizeof(readBuffer));
 	memset(states, 0, sizeof(ArduinoState) * 2);
@@ -61,15 +59,15 @@ bool Footboard::GetStateFromArduino(void)
 
 	// salvo i dati solo per stamparli ogni tanto, il flusso vero e' quello che entra negli attuatori
 	/*
-	ArduinoState state;
-	state.channel = channel;
-	state.force = force;
-	state.position = position;
-	state.pid = pid;
-	state.ef = ef;
-	state.epos = epos;
-	states.push_back(state);
-	*/
+	 ArduinoState state;
+	 state.channel = channel;
+	 state.force = force;
+	 state.position = position;
+	 state.pid = pid;
+	 state.ef = ef;
+	 state.epos = epos;
+	 states.push_back(state);
+	 */
 
 	states[channel].channel = channel;
 	states[channel].force = force;
@@ -103,8 +101,7 @@ bool Footboard::GetStateFromArduino(void)
  */
 char arduinoCommandBuffer[64];
 
-bool Footboard::SendForceCommandToArduino(const int& channel, const int& force,
-		const int& maxForce)
+bool Footboard::SendForceCommandToArduino(const int& channel, const int& force, const int& maxForce)
 {
 	if (force < -999 || force > 999 || maxForce < -99 || maxForce > 99)
 	{
@@ -129,31 +126,30 @@ bool Footboard::SendForceCommandToArduino(const int& channel, const int& force,
 	return (bytesSent != -1);
 }
 
-bool Footboard::SendPositionCommandToArduino(const int& channel_,
-		const int& position_, const int& maxForceToGetToPosition_)
+bool Footboard::SendPositionCommandToArduino(const int& channel_, const int& position_,
+		const int& maxForceToGetToPosition_)
 {
-	int arduinoPosition = position_ * positionCommandPositionConversionFactor;
-	int arduinoForce = maxForceToGetToPosition_ * positionCommandForceConversionFactor;
+	int arduinoPosition = position_ * positionConversionFactor;
+	int arduinoForce = maxForceToGetToPosition_ * forceConversionFactor;
 
-	if (arduinoPosition < 0 || arduinoPosition > 999 || arduinoForce < -99
-			|| arduinoForce > 99)
+	if (arduinoPosition < 0 || arduinoPosition > 999 || arduinoForce < -99 || arduinoForce > 99)
 	{
-		cout << "warn: position command params out of bounds after conversion: pos:" << arduinoPosition << " force:" << arduinoForce << endl;
+		cout << "warn: position command params out of bounds after conversion: pos:" << arduinoPosition << " force:"
+				<< arduinoForce << endl;
 		cout << "will NOT send command to Arduino" << endl;
 		return false;
 	}
 
-	sprintf(arduinoCommandBuffer, "P %1d %03d %02d\r\n", channel_, arduinoPosition,
-			arduinoForce);
+	sprintf(arduinoCommandBuffer, "P %1d %03d %02d\r\n", channel_, arduinoPosition, arduinoForce);
 
-    // riformatto un pelo, evito eoln multipli
-    string command(arduinoCommandBuffer);
-    trim_right(command);
+	// riformatto un pelo, evito eoln multipli
+	string command(arduinoCommandBuffer);
+	trim_right(command);
 	cout << "Footboard sending string to arduino: '" << command << "\\r\\n'" << endl;
 
 	assert(arduinoCommandBuffer[12]==0);
-    assert(strlen(arduinoCommandBuffer)==12);
-    int bytesSent = serial.Write(arduinoCommandBuffer, strlen(arduinoCommandBuffer));
+	assert(strlen(arduinoCommandBuffer)==12);
+	int bytesSent = serial.Write(arduinoCommandBuffer, strlen(arduinoCommandBuffer));
 
 	return (bytesSent != -1);
 

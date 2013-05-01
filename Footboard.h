@@ -53,8 +53,8 @@ public:
 	// letti da json
 	// int arduinoPosition = position_ * positionCommandPositionConversionFactor;
 	// int arduinoForce = maxForceToGetToPosition_ * positionCommandForceConversionFactor;
-    float positionCommandPositionConversionFactor;
-    float positionCommandForceConversionFactor;
+    float positionConversionFactor;
+    float forceConversionFactor;
 
     shared_ptr<ProgramController> programController;
 };
