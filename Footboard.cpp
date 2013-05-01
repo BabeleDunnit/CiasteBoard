@@ -17,23 +17,20 @@ using namespace boost;
 Footboard::Footboard(shared_ptr<ProgramController> pc) :
 		programController(pc)
 {
-	// TODO Auto-generated constructor stub
-	states.resize(2);
+	//states.resize(3);
 	actuators.resize(2);
-
 
 	positionCommandPositionConversionFactor =
 			programController->parser->options.get<float>("conversion.positionCommand.positionFactor");
 	positionCommandForceConversionFactor =
 			programController->parser->options.get<float>("conversion.positionCommand.forceFactor");
 
-	// cout << programController->parser->options.get<float>("c1");
-
+	memset(readBuffer, 0, sizeof(readBuffer));
+	memset(states, 0, sizeof(ArduinoState) * 2);
 }
 
 Footboard::~Footboard()
 {
-	// TODO Auto-generated destructor stub
 }
 
 #define MINFORCEVALUE 0
@@ -43,17 +40,12 @@ Footboard::~Footboard()
 
 bool Footboard::GetStateFromArduino(void)
 {
-	// leggo robba
-	// char buf[64];
 	int len = serial.Read(readBuffer, 64);
 	readBuffer[len] = 0;
-	// cout << buf << endl;
-	// provo a parsare
-	// ArduinoState state;
-	int channel = -1, force = -1, position = -1;
-//	sscanf(readBuffer, "%d %d %d", &state.channel, &state.force,
-//			&state.position);
-	sscanf(readBuffer, "%d %d %d", &channel, &force, &position);
+
+	int channel = -1, force = -1, position = -1, pid = -1, ef = -1, epos = -1;
+	// sscanf(readBuffer, "%d %d %d", &channel, &force, &position);
+	sscanf(readBuffer, "%d %d %d %d %d %d", &channel, &force, &position, &pid, &ef, &epos);
 
 	// cout << state.channel << state.force << state.position << endl;
 
@@ -68,13 +60,25 @@ bool Footboard::GetStateFromArduino(void)
 		return false;
 
 	// salvo i dati solo per stamparli ogni tanto, il flusso vero e' quello che entra negli attuatori
+	/*
 	ArduinoState state;
 	state.channel = channel;
 	state.force = force;
 	state.position = position;
+	state.pid = pid;
+	state.ef = ef;
+	state.epos = epos;
 	states.push_back(state);
+	*/
 
-	actuators[channel].AddState(force, position);
+	states[channel].channel = channel;
+	states[channel].force = force;
+	states[channel].position = position;
+	states[channel].pid = pid;
+	states[channel].ef = ef;
+	states[channel].epos = epos;
+
+	//actuators[channel].AddState(force, position);
 
 //	int sum = 0;
 //	assert(states.size() == 128);
@@ -97,30 +101,33 @@ bool Footboard::GetStateFromArduino(void)
  + lexical_cast<string>(ls.position);
  }
  */
+char arduinoCommandBuffer[64];
 
 bool Footboard::SendForceCommandToArduino(const int& channel, const int& force,
 		const int& maxForce)
 {
-//	string command = lexical_cast<string>(channel) + " " + lexical_cast<string>(force)
-//			+ " " + lexical_cast<string>(maxForce) + lexical_cast<string>(13) + lexical_cast<string>(10);
 	if (force < -999 || force > 999 || maxForce < -99 || maxForce > 99)
 	{
 		cout << "warn: force command params out of bounds" << endl;
 		return false;
 	}
 
-	char buf[64];
-	sprintf(buf, "%1d %03d %02d\r\n", channel, force, maxForce);
-	// cout << buf << endl;
+	// char buf[64];
+	sprintf(arduinoCommandBuffer, "%1d %03d %02d\r\n", channel, force, maxForce);
 
-	int bytesSent = serial.Write(buf, strlen(buf));
+	string command(arduinoCommandBuffer);
+	trim_right(command);
+	cout << "Footboard sending string to arduino: '" << command << "\\r\\n'" << endl;
+
+	assert(arduinoCommandBuffer[10]==0);
+	assert(strlen(arduinoCommandBuffer)==10);
+
+	int bytesSent = serial.Write(arduinoCommandBuffer, strlen(arduinoCommandBuffer));
 	// usleep(100000);
 	// assert(bytesSent == command.length());
 	// cout << bytesSent << endl;
 	return (bytesSent != -1);
 }
-
-char arduinoCommandBuffer[64];
 
 bool Footboard::SendPositionCommandToArduino(const int& channel_,
 		const int& position_, const int& maxForceToGetToPosition_)
@@ -148,7 +155,6 @@ bool Footboard::SendPositionCommandToArduino(const int& channel_,
     assert(strlen(arduinoCommandBuffer)==12);
     int bytesSent = serial.Write(arduinoCommandBuffer, strlen(arduinoCommandBuffer));
 
-
 	return (bytesSent != -1);
 
 }
@@ -166,10 +172,10 @@ bool Footboard::Accept(shared_ptr<Command> c)
 //		return true;
 //	}
 
-	// per ora abbiamo solo il comando S X
 	if (c->IsExpired())
 	{
 		cout << "\n----- command start -----\n" << "Footboard accepts command: " << c->AsString() << endl;
+		c->OnAccept();
 		return true;
 	}
 

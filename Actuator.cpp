@@ -12,13 +12,10 @@
 #include <iostream>
 using namespace std;
 
-// commento aggiunto direttamente su github
-// commento aggiunto su mac
-
 Actuator::Actuator()
 {
 	// TODO Auto-generated constructor stub
-	PIDValue = previousPIDValue = 0;
+	// PIDValue = previousPIDValue = 0;
 
 }
 
@@ -40,7 +37,8 @@ bool Actuator::Accept(shared_ptr<Command> c)
 	{
 		cout << "\n----- command start -----\n" << "Actuator accepts command: " << c->AsString() << endl;
 		actualCommand = c;
-		actualCommand->acceptTime = microsec_clock::local_time();
+		// actualCommand->acceptTime = microsec_clock::local_time();
+		c->OnAccept();
 		actualCommand->Execute();
 		return true;
 	}
@@ -48,6 +46,7 @@ bool Actuator::Accept(shared_ptr<Command> c)
 	return false;
 }
 
+/*
 bool Actuator::AddState(const int& force, const int& position)
 {
 	PIDValue = positionPID.AddValue(position);
@@ -61,6 +60,7 @@ bool Actuator::AddState(const int& force, const int& position)
 	previousPIDValue = PIDValue;
 	return shooting;
 }
+*/
 
 bool Actuator::IsCommandExpired(void)
 {

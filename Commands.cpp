@@ -38,6 +38,60 @@ bool PositionWithMaxForceCommand::Execute(void)
 }
 
 
+bool ForceCommand::IsExpired(void)
+{
+	if(PositionCommand::IsExpired())
+	{
+		cout << "Exiting force command for timeout" << endl;
+		return true;
+	}
+
+/*
+		// int arduinoPosition = position_ * positionCommandPositionConversionFactor;
+		// int arduinoForce = maxForceToGetToPosition_ * positionCommandForceConversionFactor;
+
+
+		// io, in quanto comando di forza, ho anche specificato una posizione, che era questa:
+		// int positionToReach = position;
+		int positionToReachInArduinoScale = position * programController->footboard->positionCommandPositionConversionFactor;
+		// l'arduino e' arrivato qui:
+		int positionReachedByArduino = programController->footboard->states[GetChannel()].position;
+		// le due posizioni sono in due scale diverse. Portiamole nella stessa scala
+		// int positionReachedByArduinoInHostScale = positionReachedByArduino / programController->footboard->positionCommandPositionConversionFactor;
+
+		// if(abs(positionToReach - positionReachedByArduinoInHostScale) < 0.1 * positiontoReach)
+		int delta = positionReachedByArduino - arduinoPositionOnAccept;
+		if(delta >= 0) // devo sorpassare
+		{
+			if(positionReachedByArduino >= positionToReachInArduinoScale)
+			{
+				cout << "Target pos reached, exiting" << endl;
+				return true;
+			}
+		}
+		else if(delta < 0)
+		{
+			if(positionReachedByArduino <= positionToReachInArduinoScale)
+			{
+				cout << "Target pos reached, exiting" << endl;
+				return true;
+			}
+
+		}
+*/
+
+	return false;
+}
+
+
+
+bool ForceCommand::Execute(void)
+{
+	// TODO: mettere a posto questo 99
+	return programController->footboard->SendForceCommandToArduino(channel, force, 99);
+}
+
+
 bool SemaphoreCommand::IsExpired(void)
 {
 	// qui un giorno eventualmente vettorizzeremo tutto quando avremo 20 attuatori. per ora facciamo cosi' alla brutta
@@ -57,7 +111,6 @@ bool SemaphoreCommand::IsExpired(void)
 
 	if (mode == "x")
 	{
-
 		return (isExpired0 && isExpired1);
 	}
 	else if (mode == "0")
@@ -92,4 +145,13 @@ bool SemaphoreCommand::IsExpired(void)
 
 	return true;
 }
+
+void Command::OnAccept(void)
+{
+	acceptTime = microsec_clock::local_time();
+	arduinoPositionOnAccept = programController->footboard->states[GetChannel()].position;
+}
+
+
+
 

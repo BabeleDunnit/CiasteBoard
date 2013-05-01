@@ -105,7 +105,7 @@ int Serial::Write(const void* buf, size_t len)
 	boost::unique_lock<boost::mutex> scoped_lock(mutex);
 	int written = ::write(fd, buf, len);
 	// senza queste sleep si incarta tutto
-	usleep(240000);
+	// usleep(240000);
 	return (written == len);
 }
 
@@ -120,6 +120,6 @@ int Serial::Read(void* buf, size_t len)
     boost::unique_lock<boost::mutex> scoped_lock(mutex);
 	int nread = ::read(fd, buf, len);
 	// senza queste sleep si incarta tutto
-	usleep(20000);
+	// usleep(20000);
 	return nread;
 }

@@ -6,20 +6,16 @@
 // Description : Hello World in C, Ansi-style
 //============================================================================
 
-//#include <stdio.h>
-//#include <stdlib.h>
 
 #include <iostream>
-//#include <boost/lexical_cast.hpp>
-//using namespace boost;
-
-//#include "ArduinoSerial.h"
-//#include "ArduinoCommander.h"
-//#include "ProgramParser.h"
 #include "ProgramController.h"
 #include "ProgramParser.h"
 
-// attualmente salvato come pedana1.4 in dropbox/projects/ciaste
+/*
+ * History
+ * 20130430 vediamo i comandi di forza
+ */
+
 
 int main(void)
 {
@@ -99,16 +95,9 @@ int main(void)
 	}
 #endif
 
-//	ProgramParser pp;
-//	pp.ParseProgram("testprogram.txt");
-//	pp.ParseOptions("testoptions.properties");
-//    setlocale (LC_ALL, "C.UTF-8");
-//    locale loc("C.UTF-8");
 
 	shared_ptr<ProgramController> controller(new ProgramController);
 	controller->Init();
-//	controller->parser->ParseProgram("program.ftb");
-//    controller->parser->ParseOptions("options.json");
 
     string serialName = controller->parser->options.get<string>("serial");
     if(serialName.length())
@@ -118,6 +107,7 @@ int main(void)
 	    usleep(15000000);
     }
 
+    // leggiamo un po' di roba per sincronizzarci e svuotare il buffer
     for(int i = 0; i < 8; i++)
     	controller->footboard->GetStateFromArduino();
 

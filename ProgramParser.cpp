@@ -143,6 +143,7 @@ bool ProgramParser::ParseProgram(const string& path)
 
 	// aggiungo un ultimo comando nullo - teoricamente un giorno non servira' piu'
 	commands->push_back(shared_ptr<Command>(new Command()));
+	commands->back()->programController = programController;
 
 	cout << "Parsed " << commands->size() << " commands" << endl;
 	for (int i = 0; i < commands->size(); ++i)

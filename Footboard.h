@@ -8,22 +8,20 @@
 #ifndef ARDUINOCOMMANDER_H_
 #define ARDUINOCOMMANDER_H_
 
-// #include <vector>
-//using namespace std;
 #include <boost/circular_buffer.hpp>
 
 #include "Serial.h"
 #include "Actuator.h"
-// #include "ProgramController.h"
-
 
 struct ArduinoState
 {
 	int channel; // 0 o 1
 	int force;
 	int position;
+	int pid;
+	int ef;
+	int epos;
 };
-
 
 class Command;
 class ProgramController;
@@ -35,7 +33,6 @@ public:
 	virtual ~Footboard();
 
 	bool GetStateFromArduino(void);
-	// string getLastStateString(const int& channel);
 
 	bool SendForceCommandToArduino(const int& channel, const int& force, const int& maxForce);
 	bool SendPositionCommandToArduino(const int& channel, const int& position, const int& maxForceToGetToPosition);
@@ -45,13 +42,17 @@ public:
 	Serial serial;
 
 	// only for debug purposes
-	circular_buffer<ArduinoState> states;
+	// circular_buffer<ArduinoState> states;
+	// li tengo gia' separati per canale
+	ArduinoState states[2];
 
 	vector<Actuator> actuators;
 
 	char readBuffer[64];
 
 	// letti da json
+	// int arduinoPosition = position_ * positionCommandPositionConversionFactor;
+	// int arduinoForce = maxForceToGetToPosition_ * positionCommandForceConversionFactor;
     float positionCommandPositionConversionFactor;
     float positionCommandForceConversionFactor;
 

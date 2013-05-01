@@ -39,15 +39,15 @@ public:
 
 	bool Accept(shared_ptr<Command> c);
 
-	bool AddState(const int& force, const int& position);
+	// bool AddState(const int& force, const int& position);
 
 	bool IsCommandExpired(void);
 	bool KillCommand(void); //  { if(actualCommand) actualCommand->Kill(); }
 
-	PID positionPID;
+	// PID positionPID;
 
-	int previousPIDValue;
-	int PIDValue;
+	//int previousPIDValue;
+	//int PIDValue;
 
 private:
 	// il comando puo' essere nullo, e voglio astrarre che un comando nullo e' da considerarsi "expired"

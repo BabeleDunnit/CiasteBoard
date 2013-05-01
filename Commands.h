@@ -11,7 +11,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 using namespace boost::posix_time;
 #include <boost/shared_ptr.hpp>
-// #include <boost/lexical_cast.hpp>
 using namespace boost;
 
 #include <string>
@@ -21,10 +20,7 @@ class ProgramController;
 
 struct Command
 {
-	virtual int GetChannel(void)
-	{
-		return -1;
-	}
+	virtual int GetChannel(void) { return -1; }
 
 	virtual string AsString(void) { return "null command"; }
 
@@ -33,8 +29,13 @@ struct Command
 	virtual bool Kill(void) { return true; }
 
 	virtual bool Execute(void) { return true; }
+	virtual void OnAccept(void);
 
 	ptime acceptTime;
+
+	// abbiamo bisogno di sapere dove era Arduino quando questo questo comando e' stato accettato
+	int arduinoPositionOnAccept;
+
 	shared_ptr<ProgramController> programController;
 };
 
@@ -45,10 +46,7 @@ struct PositionCommand: public Command
 	{
 	}
 
-	virtual int GetChannel(void)
-	{
-		return channel;
-	}
+	virtual int GetChannel(void) { return channel; }
 
 	virtual string AsString(void)
 	{
@@ -65,6 +63,7 @@ struct PositionCommand: public Command
 	int channel;
 	int position;
 	int timeLimit;
+
 
 };
 
@@ -102,6 +101,9 @@ struct ForceCommand: public PositionCommand
 				+ lexical_cast<string>(timeLimit);
 	}
 
+	virtual bool IsExpired(void);
+	virtual bool Execute(void);
+
 	int force;
 };
 
@@ -118,6 +120,8 @@ struct ForceWithDeltaCommand: public ForceCommand
 		return ForceCommand::AsString() + " "
 				+ lexical_cast<string>(optionalDelta);
 	}
+
+	virtual bool Execute(void) { cout << "Unimplemented Command" << endl; return true; }
 
 	int optionalDelta;
 };

@@ -16,14 +16,11 @@
 ProgramController::ProgramController() :
 		running(true), programCounter(0)
 {
-
-	// TODO Auto-generated constructor stub
 	loopTime = lastInfoTime = boost::posix_time::microsec_clock::local_time();
 }
 
 ProgramController::~ProgramController()
 {
-	// TODO Auto-generated destructor stub
 }
 
 bool ProgramController::Run(void)
@@ -61,10 +58,25 @@ bool ProgramController::Run(void)
 			// cout << "time: " << (timeNow - startTime).total_microseconds() / 1000000.0;
             cout << "time: " << fixed << setprecision(2) << setw(7) << elapsedTime;
 			cout << " info arduino:";
-			for(circular_buffer<ArduinoState>::iterator i = footboard->states.begin(); i != footboard->states.end(); ++i)
+
+			/*
+			// qui faccio un trusco per stampare sempre prima il canale 0 e poi 1
+			int channelsPrinted = 0;
+			for(circular_buffer<ArduinoState>::iterator i = footboard->states.begin(); i != footboard->states.end() && channelsPrinted < 2 ; ++i)
 			{
-				cout << " ch:" << i->channel << " f:" << i->force << " p:" << i->position;
+				if(i->channel == 1) continue;
+				cout << " ch:" << i->channel << " f:" << i->force << " p:" << i->position
+						<< " pid:" << i->pid << " ef:" << i->ef << " epos:" << i->epos;
+				++channelsPrinted;
 			}
+			*/
+			cout << " ch:" << footboard->states[0].channel << " f:" << footboard->states[0].force << " p:" << footboard->states[0].position
+									<< " pid:" << footboard->states[0].pid << " ef:" << footboard->states[0].ef << " epos:" << footboard->states[0].epos;
+
+			cout << " ch:" << footboard->states[1].channel << " f:" << footboard->states[1].force << " p:" << footboard->states[1].position
+									<< " pid:" << footboard->states[1].pid << " ef:" << footboard->states[1].ef << " epos:" << footboard->states[1].epos;
+
+
 			cout << endl;
 			lastInfoTime = timeNow;
 		}

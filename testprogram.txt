@@ -1,4 +1,4 @@
-# pipppo Caro Aaron questo testo E' GIA UN PROGRAMMA
+# Caro Aaron questo testo E' GIA UN PROGRAMMA
 # ------------------------------ CMD LINE structure
 # F DL <F limit>  max force difference
 # F LL <F limit> max sum of pressures on both ch
