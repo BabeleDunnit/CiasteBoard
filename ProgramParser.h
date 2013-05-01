@@ -38,6 +38,7 @@ public:
 	int pdf;
 
 	shared_ptr<vector<shared_ptr<Command> > > commands;
+	// shared_ptr<Command> lastParsedCommand;
 
 	int parsedLineNum;
 

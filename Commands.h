@@ -36,6 +36,9 @@ struct Command
 	// abbiamo bisogno di sapere dove era Arduino quando questo questo comando e' stato accettato
 	int arduinoPositionOnAccept;
 
+	// il numero di linea di questo comando nel programma sorgente
+	int lineNumber;
+
 	shared_ptr<ProgramController> programController;
 };
 
@@ -133,10 +136,7 @@ struct SemaphoreCommand: public Command
 	{
 	}
 
-	virtual string AsString(void)
-	{
-		return "s " + mode;
-	}
+	virtual string AsString(void) { return "s " + mode; }
 
 	virtual bool IsExpired(void);
 

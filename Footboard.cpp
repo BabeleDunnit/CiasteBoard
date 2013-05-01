@@ -162,15 +162,19 @@ bool Footboard::Accept(shared_ptr<Command> c)
 	{
 		return actuators[channel].Accept(c);
 	}
-//	else
-//	{
-//		cout << "Footboard accepts command: " << c->AsString() << endl;
-//		return true;
-//	}
 
+	// se arriviamo qui e' un comando per la footboard
+	assert(channel == -1);
+
+	// questo test viene fatto perche' i comandi per la footboard, ovvero i vari semafori,
+	// sono considerati expired in funzione della expiration dei comandi che stanno girando
+	// sui diversi canali. In verita' trae un po' in inganno, perche' i semafori non "fanno" nulla,
+	// ma semplicemente bloccano fino a quando non sono expired. Questo implica che CI VUOLE SEMPRE
+	// un S X alla fine del programma
 	if (c->IsExpired())
 	{
-		cout << "\n----- command start -----\n" << "Footboard accepts command: " << c->AsString() << endl;
+		cout << "\n----- command start -----\n" << "Footboard accepts command: " << c->AsString()
+		<< " (line: " << c->lineNumber << ")" << endl;
 		c->OnAccept();
 		return true;
 	}

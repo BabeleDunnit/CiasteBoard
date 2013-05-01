@@ -41,7 +41,6 @@ bool ProgramParser::ParseProgram(const string& path)
 		++parsedLineNum;
 		string line(linebuf);
 		trim(line);
-		// cout << "line read: " << parsedLineNum << " " << line << endl;
 
 		// io AMO boost.
 		// boost::char_separator<char> sep;
@@ -50,12 +49,13 @@ bool ProgramParser::ParseProgram(const string& path)
 		tokenizer<boost::char_separator<char> > tok(line, sep);
 
 		vector<string> tokens;
-		for (tokenizer<boost::char_separator<char> >::iterator i = tok.begin();
-				i != tok.end(); ++i)
+		for (tokenizer<boost::char_separator<char> >::iterator i = tok.begin(); i != tok.end(); ++i)
 		{
 			tokens.push_back(to_lower_copy(*i));
 			// cout << "<" << *i << ">" << endl;
 		}
+
+		// lastParsedCommand.reset();
 
 		if (tokens.empty() || tokens[0][0] == '#')
 		{
@@ -65,15 +65,13 @@ bool ProgramParser::ParseProgram(const string& path)
 		{
 			if (fdl != -1)
 			{
-				cout << "ERROR: F DL set again at line " << parsedLineNum
-						<< endl;
+				cout << "ERROR: F DL set again at line " << parsedLineNum << endl;
 				return false;
 			}
 
 			if (tokens.size() < 3)
 			{
-				cout << "ERROR: F DL value not found at line " << parsedLineNum
-						<< endl;
+				cout << "ERROR: F DL value not found at line " << parsedLineNum << endl;
 				return false;
 			}
 
@@ -83,15 +81,13 @@ bool ProgramParser::ParseProgram(const string& path)
 		{
 			if (fll != -1)
 			{
-				cout << "ERROR: F LL set again at line " << parsedLineNum
-						<< endl;
+				cout << "ERROR: F LL set again at line " << parsedLineNum << endl;
 				return false;
 			}
 
 			if (tokens.size() < 3)
 			{
-				cout << "ERROR: F LL value not found at line " << parsedLineNum
-						<< endl;
+				cout << "ERROR: F LL value not found at line " << parsedLineNum << endl;
 				return false;
 			}
 
@@ -101,15 +97,13 @@ bool ProgramParser::ParseProgram(const string& path)
 		{
 			if (pdf != -1)
 			{
-				cout << "ERROR: P DF set again at line " << parsedLineNum
-						<< endl;
+				cout << "ERROR: P DF set again at line " << parsedLineNum << endl;
 				return false;
 			}
 
 			if (tokens.size() < 3)
 			{
-				cout << "ERROR: P DF value not found at line " << parsedLineNum
-						<< endl;
+				cout << "ERROR: P DF value not found at line " << parsedLineNum << endl;
 				return false;
 			}
 
@@ -133,21 +127,39 @@ bool ProgramParser::ParseProgram(const string& path)
 		}
 		else
 		{
-			cout << "ERROR: unrecognized command at line " << parsedLineNum
-					<< endl;
+			cout << "ERROR: unrecognized command at line " << parsedLineNum << endl;
 			return false;
 		}
 
-		commands->back()->programController = programController;
+//		commands->back()->programController = programController;
+//		commands->back()->lineNumber = parsedLineNum;
+
+		// le linee vuote incasinavano, rifacevo qs operazione piu volte
+//		if (lastParsedCommand)
+//		{
+//			lastParsedCommand->programController = programController;
+//			lastParsedCommand->lineNumber = parsedLineNum;
+//		}
 	}
 
 	// aggiungo un ultimo comando nullo - teoricamente un giorno non servira' piu'
-	commands->push_back(shared_ptr<Command>(new Command()));
-	commands->back()->programController = programController;
+//	commands->push_back(shared_ptr<Command>(new Command()));
+//	commands->back()->programController = programController;
+//
+//	lastParsedCommand.reset(new SemaphoreCommand(tokens[1]));
+//		commands->push_back(lastParsedCommand);
 
-	cout << "Parsed " << commands->size() << " commands" << endl;
+	// e' OBBLIGATORIO alla fine un comando S X, che e' quello che, rifiutando di essere accettato
+	// fino a quando entrambi i canali hanno finito, impedisce l'uscita anticipata.
+	vector<string> sxcommand;
+	sxcommand.push_back("s");
+	sxcommand.push_back("x");
+	ParseSemaphoreCommand(sxcommand);
+
+
+	cout << "Parsed " << commands->size() << " commands:" << endl;
 	for (int i = 0; i < commands->size(); ++i)
-		cout << (*commands)[i]->AsString() << endl;
+		cout << "line " << (*commands)[i]->lineNumber << ": " << (*commands)[i]->AsString() << endl;
 
 	return true;
 }
@@ -174,13 +186,15 @@ bool ProgramParser::ParseForceCommand(const vector<string>& tokens)
 
 	Command* cmd = NULL;
 	if (tokens.size() > 5)
-		cmd = new ForceWithDeltaCommand(channel, force, position, timelimit,
-				lexical_cast<int>(tokens[5]));
+		cmd = new ForceWithDeltaCommand(channel, force, position, timelimit, lexical_cast<int>(tokens[5]));
 	else
 		cmd = new ForceCommand(channel, force, position, timelimit);
 
-	shared_ptr<Command> fc(cmd);
-	commands->push_back(fc);
+	//shared_ptr<Command> fc(cmd);
+	shared_ptr<Command> lastParsedCommand(cmd);
+	commands->push_back(lastParsedCommand);
+	lastParsedCommand->programController = programController;
+	lastParsedCommand->lineNumber = parsedLineNum;
 
 	return true;
 }
@@ -200,24 +214,29 @@ bool ProgramParser::ParsePositionCommand(const vector<string>& tokens)
 
 	Command* cmd = NULL;
 	if (tokens.size() > 4)
-		cmd = new PositionWithMaxForceCommand(channel, position, timelimit,
-				lexical_cast<int>(tokens[4]));
+		cmd = new PositionWithMaxForceCommand(channel, position, timelimit, lexical_cast<int>(tokens[4]));
 	else
 		cmd = new PositionCommand(channel, position, timelimit);
 
-	shared_ptr<Command> pc(cmd);
-	commands->push_back(pc);
-
+//	shared_ptr<Command> pc(cmd);
+//	commands->push_back(pc);
+	shared_ptr<Command> lastParsedCommand(cmd);
+	commands->push_back(lastParsedCommand);
+	lastParsedCommand->programController = programController;
+	lastParsedCommand->lineNumber = parsedLineNum;
 	return true;
 }
 
 bool ProgramParser::ParseSemaphoreCommand(const vector<string>& tokens)
 {
 	assert(tokens[0] == "s");
-	shared_ptr<Command> sc(new SemaphoreCommand(tokens[1]));
-	commands->push_back(sc);
+//	shared_ptr<Command> sc(new SemaphoreCommand(tokens[1]));
+//	commands->push_back(sc);
 
+	shared_ptr<Command> lastParsedCommand(new SemaphoreCommand(tokens[1]));
+	commands->push_back(lastParsedCommand);
+	lastParsedCommand->programController = programController;
+	lastParsedCommand->lineNumber = parsedLineNum;
 	return true;
 }
-
 

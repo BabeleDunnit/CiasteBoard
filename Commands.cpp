@@ -42,7 +42,7 @@ bool ForceCommand::IsExpired(void)
 {
 	if(PositionCommand::IsExpired())
 	{
-		cout << "Exiting force command for timeout" << endl;
+		// cout << "Exiting force command for timeout" << endl;
 		return true;
 	}
 
@@ -82,8 +82,6 @@ bool ForceCommand::IsExpired(void)
 
 	return false;
 }
-
-
 
 bool ForceCommand::Execute(void)
 {
