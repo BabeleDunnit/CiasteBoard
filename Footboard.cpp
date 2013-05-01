@@ -31,11 +31,12 @@ Footboard::~Footboard()
 {
 }
 
+/*
 #define MINFORCEVALUE 0
 #define MINPOSITIONVALUE 0
 #define MAXFORCEVALUE 4095
 #define MAXPOSITIONVALUE 4095
-
+*/
 bool Footboard::GetStateFromArduino(void)
 {
 	int len = serial.Read(readBuffer, 64);
@@ -48,6 +49,7 @@ bool Footboard::GetStateFromArduino(void)
 	// cout << state.channel << state.force << state.position << endl;
 
 	// vediamo se e' valida la lettura
+	/*
 	if (channel != 0 && channel != 1)
 		return false;
 
@@ -56,6 +58,7 @@ bool Footboard::GetStateFromArduino(void)
 
 	if (position < MINPOSITIONVALUE || position > MAXPOSITIONVALUE)
 		return false;
+		*/
 
 	// salvo i dati solo per stamparli ogni tanto, il flusso vero e' quello che entra negli attuatori
 	/*
@@ -103,9 +106,13 @@ char arduinoCommandBuffer[64];
 
 bool Footboard::SendForceCommandToArduino(const int& channel, const int& force, const int& maxForce)
 {
-	if (force < -999 || force > 999 || maxForce < -99 || maxForce > 99)
+	int arduinoForce = force * forceConversionFactor;
+	int arduinoMaxForce = maxForce * forceConversionFactor;
+
+	if (arduinoForce < -999 || arduinoForce > 999 || arduinoMaxForce < -99 || arduinoMaxForce > 99)
 	{
 		cout << "warn: force command params out of bounds" << endl;
+		cout << "will NOT send command to Arduino" << endl;
 		return false;
 	}
 
@@ -115,6 +122,7 @@ bool Footboard::SendForceCommandToArduino(const int& channel, const int& force, 
 	string command(arduinoCommandBuffer);
 	trim_right(command);
 	cout << "Footboard sending string to arduino: '" << command << "\\r\\n'" << endl;
+	programController->logFile << command << "\\r\\n" << endl;
 
 	assert(arduinoCommandBuffer[10]==0);
 	assert(strlen(arduinoCommandBuffer)==10);
@@ -146,6 +154,7 @@ bool Footboard::SendPositionCommandToArduino(const int& channel_, const int& pos
 	string command(arduinoCommandBuffer);
 	trim_right(command);
 	cout << "Footboard sending string to arduino: '" << command << "\\r\\n'" << endl;
+	programController->logFile << command << "\\r\\n" << endl;
 
 	assert(arduinoCommandBuffer[12]==0);
 	assert(strlen(arduinoCommandBuffer)==12);

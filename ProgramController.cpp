@@ -10,17 +10,16 @@
 #include "Commands.h"
 #include "Footboard.h"
 
-//#include <boost/date_time/posix_time/posix_time.hpp>
-//#include <boost/thread.hpp>
-
 ProgramController::ProgramController() :
 		running(true), programCounter(0)
 {
-	loopTime = lastInfoTime = boost::posix_time::microsec_clock::local_time();
+	loopTime = lastLogArduinoDataTime = boost::posix_time::microsec_clock::local_time();
+	logFile.open("footboard.log");
 }
 
 ProgramController::~ProgramController()
 {
+	logFile.close();
 }
 
 bool ProgramController::Run(void)
@@ -44,48 +43,40 @@ bool ProgramController::Run(void)
 	{
 
 		ptime timeNow = boost::posix_time::microsec_clock::local_time();
+		secondsFromStart = (timeNow - startTime).total_microseconds() / 1000000.0;
 		deltaT = timeNow - loopTime;
 		loopTime = timeNow;
 
 		// leggo lo stato della pedana
 		footboard->GetStateFromArduino();
 
-		double elapsedTime = (timeNow - startTime).total_microseconds() / 1000000.0;
+		// double elapsedTime = (timeNow - startTime).total_microseconds() / 1000000.0;
 
 		// una volta ogni tanto stampo gli ultimi dati letti cosi' per gradire
-		if((timeNow - lastInfoTime).total_microseconds() >= 1000000)
+		if((timeNow - lastLogArduinoDataTime).total_microseconds() >= 1000000)
 		{
-			// cout << "time: " << (timeNow - startTime).total_microseconds() / 1000000.0;
+			/*
             cout << "time: " << fixed << setprecision(2) << setw(7) << elapsedTime;
 			cout << " info arduino:";
-
-			/*
-			// qui faccio un trusco per stampare sempre prima il canale 0 e poi 1
-			int channelsPrinted = 0;
-			for(circular_buffer<ArduinoState>::iterator i = footboard->states.begin(); i != footboard->states.end() && channelsPrinted < 2 ; ++i)
-			{
-				if(i->channel == 1) continue;
-				cout << " ch:" << i->channel << " f:" << i->force << " p:" << i->position
-						<< " pid:" << i->pid << " ef:" << i->ef << " epos:" << i->epos;
-				++channelsPrinted;
-			}
-			*/
 			cout << " ch:" << footboard->states[0].channel << " f:" << footboard->states[0].force << " p:" << footboard->states[0].position
 									<< " pid:" << footboard->states[0].pid << " ef:" << footboard->states[0].ef << " epos:" << footboard->states[0].epos;
 
 			cout << " ch:" << footboard->states[1].channel << " f:" << footboard->states[1].force << " p:" << footboard->states[1].position
 									<< " pid:" << footboard->states[1].pid << " ef:" << footboard->states[1].ef << " epos:" << footboard->states[1].epos;
-
-
 			cout << endl;
-			lastInfoTime = timeNow;
+			*/
+
+			LogArduinoDataOnStream(cout);
+			LogArduinoDataOnStream(logFile);
+
+			lastLogArduinoDataTime = timeNow;
 		}
 
 		shared_ptr<Command> nextCommand = (*commands)[programCounter];
 		// cout << "exec command " << nextCommand->AsString() << endl;
 		if (footboard->Accept(nextCommand))
 		{
-			cout << "time: " << elapsedTime << " - Executed command: " << nextCommand->AsString()
+			cout << "time: " << secondsFromStart << " - Executed command: " << nextCommand->AsString()
 			<< endl << "------ command end ------\n" << endl;
 			++programCounter;
 			if (programCounter >= commands->size())
@@ -110,5 +101,19 @@ bool ProgramController::Init(void)
 	commands = parser->commands;
 	return true;
 }
+
+void ProgramController::LogArduinoDataOnStream(ostream& s)
+{
+	// double elapsedTime = (loopTime - startTime).total_microseconds() / 1000000.0;
+    s << "time: " << fixed << setprecision(2) << setw(7) << secondsFromStart;
+	s << " info arduino:";
+	s << " ch:" << footboard->states[0].channel << " f:" << footboard->states[0].force << " p:" << footboard->states[0].position
+							<< " pid:" << footboard->states[0].pid << " ef:" << footboard->states[0].ef << " epos:" << footboard->states[0].epos;
+
+	s << " ch:" << footboard->states[1].channel << " f:" << footboard->states[1].force << " p:" << footboard->states[1].position
+							<< " pid:" << footboard->states[1].pid << " ef:" << footboard->states[1].ef << " epos:" << footboard->states[1].epos;
+	s << endl;
+}
+
 
 

@@ -53,8 +53,8 @@ struct PositionCommand: public Command
 
 	virtual string AsString(void)
 	{
-		return lexical_cast<string>(channel) + " p "
-				+ lexical_cast<string>(position) + " "
+		return "ch:" +lexical_cast<string>(channel) + " P "
+				+ "pos:" + lexical_cast<string>(position) + " timeout:"
 				+ lexical_cast<string>(timeLimit);
 	}
 
@@ -80,7 +80,7 @@ struct PositionWithMaxForceCommand: PositionCommand
 
 	virtual string AsString(void)
 	{
-		return PositionCommand::AsString() + " "
+		return PositionCommand::AsString() + " optMaxF:"
 				+ lexical_cast<string>(optionalMaxForce);
 	}
 
@@ -98,10 +98,10 @@ struct ForceCommand: public PositionCommand
 
 	virtual string AsString(void)
 	{
-		return lexical_cast<string>(channel) + " f "
-				+ lexical_cast<string>(force) + " "
-				+ lexical_cast<string>(position) + " "
-				+ lexical_cast<string>(timeLimit);
+		return "ch:" + lexical_cast<string>(channel) + " F "
+				+ "f:" +lexical_cast<string>(force) + " "
+				+ "pos:" + lexical_cast<string>(position) + " "
+				+ "timeout:" + lexical_cast<string>(timeLimit);
 	}
 
 	virtual bool IsExpired(void);
@@ -121,7 +121,7 @@ struct ForceWithDeltaCommand: public ForceCommand
 	virtual string AsString(void)
 	{
 		return ForceCommand::AsString() + " "
-				+ lexical_cast<string>(optionalDelta);
+				+ "optDelta:" + lexical_cast<string>(optionalDelta);
 	}
 
 	virtual bool Execute(void) { cout << "Unimplemented Command" << endl; return true; }

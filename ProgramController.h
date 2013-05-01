@@ -37,15 +37,23 @@ public:
     shared_ptr<vector<shared_ptr<Command> > > commands;
     int programCounter;
 
+    // time all'inizio del loop
     ptime loopTime;
+
+    // durata dell'ultimo loop
     time_duration deltaT;
-    ptime lastInfoTime;
+
+    // ultima volta che abbiamo stampato le info arduino
+    ptime lastLogArduinoDataTime;
+
+    // inizio esecuzione programma
     ptime startTime;
 
-    // float positionCommandPositionConversionFactor;
-    // float positionCommandForceConversionFactor;
+    // secondi passati dall'inizio esecuzione
+    double secondsFromStart;
 
-
+    ofstream logFile;
+    void LogArduinoDataOnStream(ostream&);
 };
 
 #endif /* PROGRAMCONTROLLER_H_ */
