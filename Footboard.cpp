@@ -76,6 +76,8 @@ bool Footboard::GetStateFromArduino(void)
 	{
 	    // cout << "Error receiving Arduino data - abort read" << endl;
 
+	    strcpy(errorReadBuffer, readBuffer);
+
 	    states[0].channel = -1;
         states[0].force = -1;
         states[0].position = -1;
@@ -114,15 +116,6 @@ bool Footboard::GetStateFromArduino(void)
 	return true;
 }
 
-/*
- string ArduinoCommander::getLastStateString(const int& channel)
- {
- ArduinoState& ls = states[channel].back();
- return lexical_cast<string>(ls.channel) + " "
- + lexical_cast<string>(ls.force) + " "
- + lexical_cast<string>(ls.position);
- }
- */
 char arduinoCommandBuffer[64];
 
 bool Footboard::SendForceCommandToArduino(const int& channel, const int& force, const int& maxForce)

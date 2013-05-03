@@ -69,6 +69,10 @@ bool ProgramController::Run(void)
 
 			LogArduinoDataOnStream(cout);
 			LogArduinoDataOnStream(logFile);
+			if(footboard->states[0].channel == -1)
+			{
+			    cout << "communication error detected - last buffer read: " << footboard->errorReadBuffer << endl;
+			}
 
 			lastLogArduinoDataTime = timeNow;
 			loopCount = 0;

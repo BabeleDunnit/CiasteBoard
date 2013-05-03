@@ -49,6 +49,7 @@ public:
 	vector<Actuator> actuators;
 
 	char readBuffer[64];
+    char errorReadBuffer[64];
 
 	// letti da json
 	// int arduinoPosition = position_ * positionCommandPositionConversionFactor;
