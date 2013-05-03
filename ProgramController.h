@@ -52,6 +52,9 @@ public:
     // secondi passati dall'inizio esecuzione
     double secondsFromStart;
 
+    // quanti loop ha fatto dall'ultima stampa?
+    int loopCount;
+
     ofstream logFile;
     void LogArduinoDataOnStream(ostream&);
 };

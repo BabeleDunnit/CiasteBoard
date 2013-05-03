@@ -114,12 +114,15 @@ int Serial::Read(void* buf, size_t len)
     if(fd == -1)
     {
         // cout << "(no arduino, skipping read)" << endl;
+
+        // sleppo per simulare comunque un timeout
+        usleep(20000);
         return 1;
     }
 
     boost::unique_lock<boost::mutex> scoped_lock(mutex);
 	int nread = ::read(fd, buf, len);
 	// senza queste sleep si incarta tutto
-	// usleep(20000);
+	// usleep(2000);
 	return nread;
 }

@@ -72,6 +72,27 @@ bool Footboard::GetStateFromArduino(void)
 	 states.push_back(state);
 	 */
 
+	if(channel != 0 && channel != 1)
+	{
+	    // cout << "Error receiving Arduino data - abort read" << endl;
+
+	    states[0].channel = -1;
+        states[0].force = -1;
+        states[0].position = -1;
+        states[0].pid = -1;
+        states[0].ef = -1;
+        states[0].epos = -1;
+
+        states[1].channel = -1;
+        states[1].force = -1;
+        states[1].position = -1;
+        states[1].pid = -1;
+        states[1].ef = -1;
+        states[1].epos = -1;
+
+        return false;
+	}
+
 	states[channel].channel = channel;
 	states[channel].force = force;
 	states[channel].position = position;

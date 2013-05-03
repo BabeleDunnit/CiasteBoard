@@ -11,7 +11,7 @@
 #include "Footboard.h"
 
 ProgramController::ProgramController() :
-		running(true), programCounter(0)
+		running(true), programCounter(0), loopCount(0)
 {
 	loopTime = lastLogArduinoDataTime = boost::posix_time::microsec_clock::local_time();
 	logFile.open("footboard.log");
@@ -46,6 +46,7 @@ bool ProgramController::Run(void)
 		secondsFromStart = (timeNow - startTime).total_microseconds() / 1000000.0;
 		deltaT = timeNow - loopTime;
 		loopTime = timeNow;
+		++loopCount;
 
 		// leggo lo stato della pedana
 		footboard->GetStateFromArduino();
@@ -70,6 +71,7 @@ bool ProgramController::Run(void)
 			LogArduinoDataOnStream(logFile);
 
 			lastLogArduinoDataTime = timeNow;
+			loopCount = 0;
 		}
 
 		shared_ptr<Command> nextCommand = (*commands)[programCounter];
@@ -105,8 +107,8 @@ bool ProgramController::Init(void)
 void ProgramController::LogArduinoDataOnStream(ostream& s)
 {
 	// double elapsedTime = (loopTime - startTime).total_microseconds() / 1000000.0;
-    s << "time: " << fixed << setprecision(2) << setw(7) << secondsFromStart;
-	s << " info arduino:";
+    s << "loops: " << fixed << setw(3) << loopCount <<  " time: " << setprecision(2) << setw(6) << secondsFromStart;
+	s << " read:";
 	s << " ch:" << footboard->states[0].channel << " f:" << footboard->states[0].force << " p:" << footboard->states[0].position
 							<< " pid:" << footboard->states[0].pid << " ef:" << footboard->states[0].ef << " epos:" << footboard->states[0].epos;
 
