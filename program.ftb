@@ -1,9 +1,13 @@
 
-
 0 F 500 100 5
 1 F 500 100 7
 0 P 200 6
 1 P 300 4
 
+# nicely go to bottom
+0 F 10 900 10
+1 F 10 900 10
+0 F 1 900 10
+1 F 1 900 10
 
-# S X
+# S X questo e' generato automaticamente (ci vuole sempre)
