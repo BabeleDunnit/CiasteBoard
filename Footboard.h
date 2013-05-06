@@ -44,7 +44,8 @@ public:
 	// only for debug purposes
 	// circular_buffer<ArduinoState> states;
 	// li tengo gia' separati per canale
-	ArduinoState states[2];
+	// ArduinoState states[2];
+    vector<ArduinoState> states;
 
 	vector<Actuator> actuators;
 

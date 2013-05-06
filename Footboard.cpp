@@ -24,7 +24,9 @@ Footboard::Footboard(shared_ptr<ProgramController> pc) :
 	forceConversionFactor = programController->parser->options.get<float>("conversion.forceFactor");
 
 	memset(readBuffer, 0, sizeof(readBuffer));
-	memset(states, 0, sizeof(ArduinoState) * 2);
+	//memset(states, 0, sizeof(ArduinoState) * 2);
+	states.resize(2);
+
 }
 
 Footboard::~Footboard()
