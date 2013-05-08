@@ -49,7 +49,7 @@ bool ProgramController::Run(void)
 		++loopCount;
 
 		// leggo lo stato della pedana
-		footboard->GetStateFromArduino();
+		bool readOk = footboard->GetStateFromArduino();
 
 		// double elapsedTime = (timeNow - startTime).total_microseconds() / 1000000.0;
 
@@ -69,7 +69,7 @@ bool ProgramController::Run(void)
 
 			LogArduinoDataOnStream(cout);
 			LogArduinoDataOnStream(logFile);
-			if(footboard->states[0].channel == -1)
+			if(!readOk)
 			{
 			    cout << "communication error detected - last buffer read: " << footboard->errorReadBuffer << endl;
 			}

@@ -26,8 +26,10 @@ public:
 
 	int fd;
 	boost::mutex mutex;
-	char readBuffer[256];
-    char writeBuffer[256];
+
+	// questa NON e' stata una buona idea... almeno, non senza testarla
+//	char readBuffer[256];
+//    char writeBuffer[256];
 };
 
 #endif /* ARDUINOSERIAL_H_ */

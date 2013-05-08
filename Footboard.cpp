@@ -44,6 +44,21 @@ bool Footboard::GetStateFromArduino(void)
 	int len = serial.Read(readBuffer, 64);
 	readBuffer[len] = 0;
 
+	if(len <= 1)
+	{
+	    // timeout
+        strcpy(errorReadBuffer, "NOT a buffer dump! :) arduino->host serial timeout");
+	    return false;
+	}
+
+	if(readBuffer[0] != '0' && readBuffer[0] != '1')
+	{
+	    cout << "message from arduino: <" << readBuffer << ">" << endl;
+	    return true;
+	}
+
+    assert(readBuffer[0] == '0' || readBuffer[0] == '1' );
+
 	int channel = -1, force = -1, position = -1, pid = -1, ef = -1, epos = -1;
 	// sscanf(readBuffer, "%d %d %d", &channel, &force, &position);
 	sscanf(readBuffer, "%d %d %d %d %d %d", &channel, &force, &position, &pid, &ef, &epos);
@@ -74,11 +89,13 @@ bool Footboard::GetStateFromArduino(void)
 	 states.push_back(state);
 	 */
 
+	// e' comunque successo qualche casino nella scanf? possibile??
 	if(channel != 0 && channel != 1)
 	{
 	    // cout << "Error receiving Arduino data - abort read" << endl;
 
-	    strcpy(errorReadBuffer, readBuffer);
+	    strncpy(errorReadBuffer, readBuffer, 64);
+	    errorReadBuffer[63] = 0;
 
 	    states[0].channel = -1;
         states[0].force = -1;

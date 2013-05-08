@@ -102,11 +102,12 @@ int Serial::Write(const void* buf, size_t len)
         return 1;
     }
 
-    memcpy(writeBuffer, buf, len);
+    // memcpy(writeBuffer, buf, len);
     // writeBuffer[len] = 0;
 
 	boost::unique_lock<boost::mutex> scoped_lock(mutex);
-	int written = ::write(fd, writeBuffer, len);
+	// int written = ::write(fd, writeBuffer, len);
+    int written = ::write(fd, buf, len);
 	// senza queste sleep si incarta tutto
 	// usleep(240000);
 	return (written == len);
@@ -123,15 +124,17 @@ int Serial::Read(void* buf, size_t len)
         return 1;
     }
 
-    readBuffer[0] = 0;
+    // readBuffer[0] = 0;
 
     boost::unique_lock<boost::mutex> scoped_lock(mutex);
-	int nread = ::read(fd, readBuffer, len);
+	// int nread = ::read(fd, readBuffer, len);
+    int nread = ::read(fd, buf, len);
+
 	// senza queste sleep si incarta tutto
 	// usleep(2000);
 
-	readBuffer[len] = 0;
-	memcpy(buf, readBuffer, len);
+//	readBuffer[len] = 0;
+//	memcpy(buf, readBuffer, len);
 
 	return nread;
 }
