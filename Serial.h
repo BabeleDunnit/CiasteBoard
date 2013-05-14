@@ -22,13 +22,15 @@ public:
 
 	bool Open(const string& serialName);
 	int Write(const void* buf, size_t len);
-	int Read(void* buf, size_t len);
+
+	// int Read(void* buf, size_t len);
+    string ReadLine(void);
 
 	int fd;
-	boost::mutex mutex;
+	// boost::mutex mutex;
 
-	// questa NON e' stata una buona idea... almeno, non senza testarla
-//	char readBuffer[256];
+	char readBuffer[4096];
+	string readString;
 //    char writeBuffer[256];
 };
 

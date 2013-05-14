@@ -23,7 +23,7 @@ Footboard::Footboard(shared_ptr<ProgramController> pc) :
 	positionConversionFactor = programController->parser->options.get<float>("conversion.positionFactor");
 	forceConversionFactor = programController->parser->options.get<float>("conversion.forceFactor");
 
-	memset(readBuffer, 0, sizeof(readBuffer));
+	// memset(readBuffer, 0, sizeof(readBuffer));
 	//memset(states, 0, sizeof(ArduinoState) * 2);
 	states.resize(2);
 
@@ -33,12 +33,7 @@ Footboard::~Footboard()
 {
 }
 
-/*
-#define MINFORCEVALUE 0
-#define MINPOSITIONVALUE 0
-#define MAXFORCEVALUE 4095
-#define MAXPOSITIONVALUE 4095
-*/
+#ifdef VECCHIO_ERRORIDILETTURA
 bool Footboard::GetStateFromArduino(void)
 {
 	int len = serial.Read(readBuffer, 64);
@@ -134,6 +129,66 @@ bool Footboard::GetStateFromArduino(void)
 
 	return true;
 }
+#endif
+
+
+// return: is read ok? if not, I will log last line!
+bool Footboard::GetStateFromArduino(void)
+{
+    string line = serial.ReadLine();
+
+    if(line.empty())
+        return true;
+
+    if(line[0] != '0' && line[0] != '1')
+    {
+        cout << "message from arduino: <" << line << ">" << endl;
+        return true;
+    }
+
+    assert(line[0] == '0' || line[0] == '1' );
+
+    int channel = -1, force = -1, position = -1, pid = -1, ef = -1, epos = -1;
+    // sscanf(readBuffer, "%d %d %d", &channel, &force, &position);
+    sscanf(line.c_str(), "%d %d %d %d %d %d", &channel, &force, &position, &pid, &ef, &epos);
+
+    // e' comunque successo qualche casino nella scanf? possibile??
+    if(channel != 0 && channel != 1)
+    {
+        // cout << "Error receiving Arduino data - abort read" << endl;
+
+        //strncpy(errorReadBuffer, readBuffer, 64);
+        errorLines.push_back(line);
+        // errorReadBuffer[63] = 0;
+
+        states[0].channel = -1;
+        states[0].force = -1;
+        states[0].position = -1;
+        states[0].pid = -1;
+        states[0].ef = -1;
+        states[0].epos = -1;
+
+        states[1].channel = -1;
+        states[1].force = -1;
+        states[1].position = -1;
+        states[1].pid = -1;
+        states[1].ef = -1;
+        states[1].epos = -1;
+
+        return false;
+    }
+
+    states[channel].channel = channel;
+    states[channel].force = force;
+    states[channel].position = position;
+    states[channel].pid = pid;
+    states[channel].ef = ef;
+    states[channel].epos = epos;
+
+    return true;
+}
+
+
 
 char arduinoCommandBuffer[64];
 

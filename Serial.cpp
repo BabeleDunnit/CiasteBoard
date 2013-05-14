@@ -105,7 +105,8 @@ int Serial::Write(const void* buf, size_t len)
     // memcpy(writeBuffer, buf, len);
     // writeBuffer[len] = 0;
 
-	boost::unique_lock<boost::mutex> scoped_lock(mutex);
+	// boost::unique_lock<boost::mutex> scoped_lock(m);
+
 	// int written = ::write(fd, writeBuffer, len);
     int written = ::write(fd, buf, len);
 	// senza queste sleep si incarta tutto
@@ -113,6 +114,47 @@ int Serial::Write(const void* buf, size_t len)
 	return (written == len);
 }
 
+
+string Serial::ReadLine(void)
+{
+    if(fd == -1)
+    {
+        // cout << "(no arduino, skipping read)" << endl;
+        // sleppo per simulare comunque un timeout
+        usleep(20000);
+        return "";
+        // strcpy(readBuffer, "lutopaperino\r\nilrestod");
+    }
+
+    int nread = ::read(fd, readBuffer, 4096);
+    string newRead;
+    if(nread != -1) // se non sono in timeout e quindi ho davvero letto qualcosa
+    {
+        // lo sparo in newRead
+        newRead = string(readBuffer, nread);
+    }
+
+    // questo per testare
+    // newRead = "lutopaperino\r\nilrestod";
+
+    // accodo al bufferazzo
+    readString += newRead;
+    // c'e' un cippa di terminatore? cerco \r\n, ovvero 13 10
+    unsigned found = readString.find("\r\n");
+    string toReturn;
+    if (found != std::string::npos)
+    {
+        // ho trovato il terminatore. Splitto il bufferazzo in due, mi tengo la coda pronta per beccarsi la prossima
+        // lettura in coda e restituisco la testa. Nota che elimino da entrambe le stringhe il \r\n.
+        toReturn = readString.substr(0, found);
+        readString = readString.substr(found+2);
+    }
+
+    return toReturn;
+}
+
+
+#ifdef NO_LEGGEALLACACCHIO
 int Serial::Read(void* buf, size_t len)
 {
     if(fd == -1)
@@ -138,3 +180,5 @@ int Serial::Read(void* buf, size_t len)
 
 	return nread;
 }
+#endif
+
