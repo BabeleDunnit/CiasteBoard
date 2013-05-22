@@ -4,7 +4,8 @@
 
 //    "serial" : "/dev/ttyACM0",
 //    "serial" : "/dev/tty.usbserial-A4001tqO",
-    "serial" : "",
+//    "serial" : "",
+    "serial" : "/dev/ttyUSB0",
     "conversion": 
     {
     		// moltiplicatore per trasformare i valori di posizione e forza 

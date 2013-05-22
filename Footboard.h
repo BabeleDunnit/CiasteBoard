@@ -32,7 +32,12 @@ public:
 	Footboard(shared_ptr<ProgramController> pc);
 	virtual ~Footboard();
 
-	bool GetStateFromArduino(void);
+	// return:
+	// 0: stringa vuota, la read e' in uno stato intermedio, sta aspettando il terminatore
+	// 1: letto dei valori validi
+	// -1: la stringa sembrava giusta ma dopo la scanf trovo dei canali diversi da 0 o 1
+	// 2: il primo carattere non e' 0 o 1 e quindi e' un messaggio di debug da Arduino
+	int GetStateFromArduino(void);
 
 	bool SendForceCommandToArduino(const int& channel, const int& force, const int& maxForce);
 	bool SendPositionCommandToArduino(const int& channel, const int& position, const int& maxForceToGetToPosition);

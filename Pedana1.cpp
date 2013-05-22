@@ -104,7 +104,7 @@ int main(void)
     {
 		cout << "Arduino expected on serial " << serialName << endl;
 		controller->footboard->serial.Open(serialName);
-	    usleep(15000000);
+	    usleep(1000000);
     }
 
     // leggiamo un po' di roba per sincronizzarci e svuotare il buffer

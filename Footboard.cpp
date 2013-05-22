@@ -132,18 +132,17 @@ bool Footboard::GetStateFromArduino(void)
 #endif
 
 
-// return: is read ok? if not, I will log last line!
-bool Footboard::GetStateFromArduino(void)
+int Footboard::GetStateFromArduino(void)
 {
     string line = serial.ReadLine();
 
     if(line.empty())
-        return true;
+        return 0;
 
     if(line[0] != '0' && line[0] != '1')
     {
-        cout << "message from arduino: <" << line << ">" << endl;
-        return true;
+        cout << "--- Message from arduino: <" << line << ">" << endl;
+        return 2;
     }
 
     assert(line[0] == '0' || line[0] == '1' );
@@ -175,7 +174,7 @@ bool Footboard::GetStateFromArduino(void)
         states[1].ef = -1;
         states[1].epos = -1;
 
-        return false;
+        return -1;
     }
 
     states[channel].channel = channel;
@@ -185,7 +184,7 @@ bool Footboard::GetStateFromArduino(void)
     states[channel].ef = ef;
     states[channel].epos = epos;
 
-    return true;
+    return 1;
 }
 
 
@@ -210,7 +209,8 @@ bool Footboard::SendForceCommandToArduino(const int& channel, const int& force, 
 	string command(arduinoCommandBuffer);
 	trim_right(command);
 	cout << "Footboard sending string to arduino: '" << command << "\\r\\n'" << endl;
-	programController->logFile << command << "\\r\\n" << endl;
+	programController->samplingLogFile << command << "\\r\\n" << endl;
+	programController->completeLogFile << command << "\\r\\n" << endl;
 
 	assert(arduinoCommandBuffer[10]==0);
 	assert(strlen(arduinoCommandBuffer)==10);
@@ -242,7 +242,8 @@ bool Footboard::SendPositionCommandToArduino(const int& channel_, const int& pos
 	string command(arduinoCommandBuffer);
 	trim_right(command);
 	cout << "Footboard sending string to arduino: '" << command << "\\r\\n'" << endl;
-	programController->logFile << command << "\\r\\n" << endl;
+	programController->samplingLogFile << command << "\\r\\n" << endl;
+	programController->completeLogFile << command << "\\r\\n" << endl;
 
 	assert(arduinoCommandBuffer[12]==0);
 	assert(strlen(arduinoCommandBuffer)==12);

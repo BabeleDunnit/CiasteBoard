@@ -36,7 +36,9 @@ bool Serial::Open(const string& serialName)
 	struct termios toptions;
 
 	/* open serial port */
-	fd = open(serialName.c_str(), O_RDWR | O_NOCTTY);
+	// AA: l'unica differenza con il nonblocking e' che.. fa 114K loop al secondo al posto di farne 80 :) :)
+	// per il resto funziona in entrambi i modi
+	fd = open(serialName.c_str(), O_RDWR | O_NOCTTY /*| O_NONBLOCK*/);
 	if(fd < 0)
 	{
 		cout << "ERROR opening Arduino port:" << serialName << endl;
@@ -126,7 +128,7 @@ string Serial::ReadLine(void)
         // strcpy(readBuffer, "lutopaperino\r\nilrestod");
     }
 
-    int nread = ::read(fd, readBuffer, 4096);
+    int nread = ::read(fd, readBuffer, 32);
     string newRead;
     if(nread != -1) // se non sono in timeout e quindi ho davvero letto qualcosa
     {

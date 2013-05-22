@@ -55,7 +55,8 @@ public:
     // quanti loop ha fatto dall'ultima stampa?
     int loopCount;
 
-    ofstream logFile;
+    ofstream samplingLogFile;
+    ofstream completeLogFile;
     void LogArduinoDataOnStream(ostream&);
 };
 

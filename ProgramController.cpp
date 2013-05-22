@@ -14,12 +14,14 @@ ProgramController::ProgramController() :
 		running(true), programCounter(0), loopCount(0)
 {
 	loopTime = lastLogArduinoDataTime = boost::posix_time::microsec_clock::local_time();
-	logFile.open("footboard.log");
+	samplingLogFile.open("sampling.log");
+	completeLogFile.open("complete.log");
 }
 
 ProgramController::~ProgramController()
 {
-	logFile.close();
+	samplingLogFile.close();
+	completeLogFile.close();
 }
 
 bool ProgramController::Run(void)
@@ -49,7 +51,9 @@ bool ProgramController::Run(void)
 		++loopCount;
 
 		// leggo lo stato della pedana
-		bool readOk = footboard->GetStateFromArduino();
+		int readStatus = footboard->GetStateFromArduino();
+		if(readStatus != 0)
+			LogArduinoDataOnStream(completeLogFile);
 
 		// double elapsedTime = (timeNow - startTime).total_microseconds() / 1000000.0;
 
@@ -68,12 +72,11 @@ bool ProgramController::Run(void)
 			*/
 
 			LogArduinoDataOnStream(cout);
-			LogArduinoDataOnStream(logFile);
-			if(!readOk)
+			LogArduinoDataOnStream(samplingLogFile);
+			if(readStatus == -1)
 			{
 			    // cout << "communication error detected - last buffer read: " << footboard->errorReadBuffer << endl;
                 cout << "communication error detected - last buffer read: " << footboard->errorLines.back() << endl;
-
 			}
 
 			lastLogArduinoDataTime = timeNow;
@@ -93,8 +96,6 @@ bool ProgramController::Run(void)
 				running = false;
 			}
 		}
-
-
 	}
 
 	return true;
