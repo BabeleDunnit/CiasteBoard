@@ -141,7 +141,7 @@ int Footboard::GetStateFromArduino(void)
 
     if(line[0] != '0' && line[0] != '1')
     {
-        cout << "--- Message from arduino: <" << line << ">" << endl;
+        cout << "--- Debug Msg: <" << line << ">" << endl;
         return 2;
     }
 

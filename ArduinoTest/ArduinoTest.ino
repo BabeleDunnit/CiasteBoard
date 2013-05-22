@@ -25,7 +25,7 @@ void loop() {
   Serial.print(val--);
   Serial.print("\r\n"); 
   
-  delay(20);
+  delay(5);
   
   // Serial.print("1 6 7 8 9 10\r\n"); 
   Serial.print("1 ");
@@ -45,7 +45,7 @@ void loop() {
     Serial.print(" e continua fino a qui\r\n"); 
   }
   
-  delay(30);
+  delay(5);
   
   if(val <= -4096)
     val = 4096;

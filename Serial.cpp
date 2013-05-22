@@ -128,7 +128,7 @@ string Serial::ReadLine(void)
         // strcpy(readBuffer, "lutopaperino\r\nilrestod");
     }
 
-    int nread = ::read(fd, readBuffer, 32);
+    int nread = ::read(fd, readBuffer, 8);
     string newRead;
     if(nread != -1) // se non sono in timeout e quindi ho davvero letto qualcosa
     {
@@ -150,6 +150,12 @@ string Serial::ReadLine(void)
         // lettura in coda e restituisco la testa. Nota che elimino da entrambe le stringhe il \r\n.
         toReturn = readString.substr(0, found);
         readString = readString.substr(found+2);
+    }
+
+    if(readString.length() > 2048)
+    {
+    	toReturn = "error - incoming serial data too fast";
+    	readString.clear();
     }
 
     return toReturn;

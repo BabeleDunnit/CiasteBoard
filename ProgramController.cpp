@@ -53,7 +53,7 @@ bool ProgramController::Run(void)
 		// leggo lo stato della pedana
 		int readStatus = footboard->GetStateFromArduino();
 		if(readStatus != 0)
-			LogArduinoDataOnStream(completeLogFile);
+			LogArduinoDataOnStreamNoLoops(completeLogFile);
 
 		// double elapsedTime = (timeNow - startTime).total_microseconds() / 1000000.0;
 
@@ -114,7 +114,7 @@ bool ProgramController::Init(void)
 void ProgramController::LogArduinoDataOnStream(ostream& s)
 {
 	// double elapsedTime = (loopTime - startTime).total_microseconds() / 1000000.0;
-    s << "loops: " << fixed << setw(3) << loopCount <<  " time: " << setprecision(2) << setw(6) << secondsFromStart;
+    s << "loops: " << fixed << setw(3) << loopCount <<  " time: " << setprecision(3) << setw(7) << secondsFromStart;
 	s << " read:";
 	s << " ch:" << footboard->states[0].channel << " f:" << footboard->states[0].force << " p:" << footboard->states[0].position
 							<< " pid:" << footboard->states[0].pid << " ef:" << footboard->states[0].ef << " epos:" << footboard->states[0].epos;
@@ -124,5 +124,17 @@ void ProgramController::LogArduinoDataOnStream(ostream& s)
 	s << endl;
 }
 
+void ProgramController::LogArduinoDataOnStreamNoLoops(ostream& s)
+{
+	// double elapsedTime = (loopTime - startTime).total_microseconds() / 1000000.0;
+    s << "time: " << fixed << setprecision(3) << setw(7) << secondsFromStart;
+	s << " read:";
+	s << " ch:" << footboard->states[0].channel << " f:" << footboard->states[0].force << " p:" << footboard->states[0].position
+							<< " pid:" << footboard->states[0].pid << " ef:" << footboard->states[0].ef << " epos:" << footboard->states[0].epos;
+
+	s << " ch:" << footboard->states[1].channel << " f:" << footboard->states[1].force << " p:" << footboard->states[1].position
+							<< " pid:" << footboard->states[1].pid << " ef:" << footboard->states[1].ef << " epos:" << footboard->states[1].epos;
+	s << endl;
+}
 
 

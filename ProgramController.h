@@ -58,6 +58,7 @@ public:
     ofstream samplingLogFile;
     ofstream completeLogFile;
     void LogArduinoDataOnStream(ostream&);
+    void LogArduinoDataOnStreamNoLoops(ostream&);
 };
 
 #endif /* PROGRAMCONTROLLER_H_ */
