@@ -36,9 +36,11 @@ bool Serial::Open(const string& serialName)
 	struct termios toptions;
 
 	/* open serial port */
-	// AA: l'unica differenza con il nonblocking e' che.. fa 114K loop al secondo al posto di farne 80 :) :)
-	// per il resto funziona in entrambi i modi
-	fd = open(serialName.c_str(), O_RDWR | O_NOCTTY /*| O_NONBLOCK*/);
+	 fd = open(serialName.c_str(), O_RDWR | O_NOCTTY );  //THIS is blocking... then
+	// fd = open(serialName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+	//fd = open(serialName.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+/*	long flag = fcntl(fd, F_GETFL, 0 );
+	fcntl(fd,F_SETFL,O_NONBLOCK);*/
 	if(fd < 0)
 	{
 		cout << "ERROR opening Arduino port:" << serialName << endl;
@@ -52,7 +54,7 @@ bool Serial::Open(const string& serialName)
 
 	/* get current serial port settings */
 	tcgetattr(fd, &toptions);
-	/* set 9600 baud both ways */
+	/* set  baud both ways */
 	cfsetispeed(&toptions, BAUDRATE);
 	cfsetospeed(&toptions, BAUDRATE);
 	/* 8 bits, no parity, no stop bits */
@@ -62,6 +64,22 @@ bool Serial::Open(const string& serialName)
 	toptions.c_cflag |= CS8;
 	/* Canonical mode */
 	toptions.c_lflag |= ICANON;
+    // no flow control
+    // toptions.c_cflag &= ~CRTSCTS;
+
+    //toptions.c_cflag &= ~HUPCL; // disable hang-up-on-close to avoid reset
+    //toptions.c_cflag |= CREAD | CLOCAL;  // turn on READ & ignore ctrl lines
+    toptions.c_iflag &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl
+    // No line processing:
+    // echo off, echo newline off, canonical mode off, 
+    // extended input processing off, signal chars off
+    toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | IEXTEN | ISIG); // make raw
+    toptions.c_oflag &= ~OPOST; // make raw
+
+    // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
+    toptions.c_cc[VMIN]  = 14; // assuming 6 numbers each 1 byte plus CR LF
+    toptions.c_cc[VTIME] = 1; // i might be too big 1=0.1 seconds!
+    
 	/* commit the serial port settings */
 	tcsetattr(fd, TCSANOW, &toptions);
 
@@ -86,13 +104,25 @@ bool Serial::Open(const string& serialName)
 	}
 */
 
-	// return 0;
+	//is it set as we asked for?
+	struct termios toptionVerif;
+	tcgetattr(fd, &toptionVerif);
+//	if ( StructComparator( toptions, toptionVerif) == 0)
+//		cout << "Damn! i told you attributes where messed up!" << endl;
+
+	// assert(memcmp(&toptions, &toptionVerif, sizeof(toptions)) == 0);
+
+	if (tcflush( fd, TCIOFLUSH) != 0) 
+		 perror("tcflush error");
+	 
 	return true;
 }
 
 Serial::~Serial()
 {
 	// TODO Auto-generated destructor stub
+	if (tcflush( fd, TCIOFLUSH) != 0)
+		 perror("tcflush error");
 	close(fd);
 }
 
@@ -106,9 +136,7 @@ int Serial::Write(const void* buf, size_t len)
 
     // memcpy(writeBuffer, buf, len);
     // writeBuffer[len] = 0;
-
 	// boost::unique_lock<boost::mutex> scoped_lock(m);
-
 	// int written = ::write(fd, writeBuffer, len);
     int written = ::write(fd, buf, len);
 	// senza queste sleep si incarta tutto
@@ -119,48 +147,99 @@ int Serial::Write(const void* buf, size_t len)
 
 string Serial::ReadLine(void)
 {
+	// i assume this is a blocking read, i.e. it waits until good data available
     if(fd == -1)
     {
         // cout << "(no arduino, skipping read)" << endl;
         // sleppo per simulare comunque un timeout
         usleep(20000);
-        return "";
-        // strcpy(readBuffer, "lutopaperino\r\nilrestod");
+        return "";   // strcpy(readBuffer, "Bad tty plutopaperino\r\nilrestod");
     }
 
-    int nread = ::read(fd, readBuffer, 8);
+    int nread = ::read(fd, readBuffer, 64);
     string newRead;
-    if(nread != -1) // se non sono in timeout e quindi ho davvero letto qualcosa
+    if(nread == -1)   {
+    	cout << "Reading error: " << strerror( errno ) << endl;  // something went wrong....
+    	return "";
+    } else if (nread == 0) {
+    	return "";
+    } else if (nread > 0 ) // luca -se ne becco 0  salto
     {
         // lo sparo in newRead
         newRead = string(readBuffer, nread);
+        readString = readString + newRead;
     }
 
-    // questo per testare
-    // newRead = "lutopaperino\r\nilrestod";
-
-    // accodo al bufferazzo
-    readString += newRead;
     // c'e' un cippa di terminatore? cerco \r\n, ovvero 13 10
-    unsigned found = readString.find("\r\n");
+    std::string::size_type found = readString.find("\r\n");
+//    cout <<  found << readString.size() << endl;
+
     string toReturn;
-    if (found != std::string::npos)
+    if (found != std::string::npos)  // i have a good line available
     {
         // ho trovato il terminatore. Splitto il bufferazzo in due, mi tengo la coda pronta per beccarsi la prossima
         // lettura in coda e restituisco la testa. Nota che elimino da entrambe le stringhe il \r\n.
-        toReturn = readString.substr(0, found);
+        toReturn = readString.substr(0, found );
         readString = readString.substr(found+2);
     }
 
     if(readString.length() > 2048)
     {
-    	toReturn = "error - incoming serial data too fast";
+    	// cout << "buffer too long, resetting.." << endl;
+    	toReturn = "buffer too long, resetting..";
     	readString.clear();
     }
 
     return toReturn;
 }
 
+
+std::string string_to_hex(const std::string& input)
+{
+    static const char* const lut = "0123456789ABCDEF";
+    static const char* spc = " ";
+    size_t len = input.length();
+
+    std::string output;
+    output.reserve(2 * len + len);
+    for (size_t i = 0; i < len; ++i)
+    {
+        const unsigned char c = input[i];
+        output.push_back(lut[c >> 4]);
+        output.push_back(lut[c & 15]);
+        output.push_back(spc[0]);
+    }
+    return output;
+}
+
+
+/*
+bool StructComparator(const termios& lhs, const termios& rhs)
+{
+// beware of this michevious function! If structs contains pointers (to pointers) it will fuck you!
+	return lhs.to_string() == rhs.to_string();
+}
+
+float MapArduPress(int channel, int SampleVal)
+{
+// accessing static conversion table we can convert it
+	float result;
+	result = ConversionTable[channel][MAXOUT_POS] * 
+	         (SampleVal - ConversionTable[channel][ZERO_POS])/ ConversionTable[channel][RANGE_POS];
+	return result;	
+}
+
+
+int CalcWeight( int Pres0, int Pos0, int Pres1, int Pos1)
+{
+// make sure to call this function several times, and average non-zero values
+// returns instant force
+	int ret = 0;
+	if ( Pos0 > ConversionTable[0][ZERO_POS] && Pos1 > ConversionTable[1][ZERO_POS] )
+		ret = (Pres0 + Pres1)/2;
+	return ret;
+}
+*/
 
 #ifdef NO_LEGGEALLACACCHIO
 int Serial::Read(void* buf, size_t len)
@@ -189,4 +268,6 @@ int Serial::Read(void* buf, size_t len)
 	return nread;
 }
 #endif
+
+
 

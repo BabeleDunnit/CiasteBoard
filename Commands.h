@@ -20,6 +20,8 @@ class ProgramController;
 
 struct Command
 {
+	Command(void) : expiredMemory(false) {}
+
 	virtual int GetChannel(void) { return -1; }
 
 	virtual string AsString(void) { return "null command"; }
@@ -40,6 +42,13 @@ struct Command
 	int lineNumber;
 
 	shared_ptr<ProgramController> programController;
+
+	// in verita' avevo capito male il comando S X: non deve controllare in "real time" se entrambi i comandi
+	// sono expired, ma fermare l'esecuzione del comando expired fino a quando anche l'altro non e' finito.
+	// prima dell'introduzione di questo flag, io potevo avere che CH0 era expired ma CH1 no, e se poi switchavano
+	// non si passava alla prossima istruzione. Vogliamo invece che si passi alla prossima istruzione.
+	// pero' e' meglio inscatolare tutto nel SemaphoreCommand
+	bool expiredMemory;
 };
 
 struct PositionCommand: public Command
