@@ -14,14 +14,10 @@ using namespace std;
 
 Actuator::Actuator()
 {
-	// TODO Auto-generated constructor stub
-	// PIDValue = previousPIDValue = 0;
-
 }
 
 Actuator::~Actuator()
 {
-	// TODO Auto-generated destructor stub
 }
 
 const float THRESHOLD = 0.05;
@@ -35,12 +31,12 @@ bool Actuator::Accept(shared_ptr<Command> c)
 	if (!actualCommand || actualCommand->IsExpired())
 // 		|| (microsec_clock::local_time() - actualCommand->acceptTime).total_seconds() > 5)
 	{
-		cout << "\n----- command start -----\n" << "Actuator accepts command: "
+		cout << "\n----- command start -----\n" << "Actuator is accepting command: "
 				<< c->AsString() << " (line: " << c->lineNumber << ")" << endl;
 		actualCommand = c;
 		// actualCommand->acceptTime = microsec_clock::local_time();
-		c->OnAccept();
-		actualCommand->Execute();
+		actualCommand->OnAccept();
+		// actualCommand->Execute();
 		return true;
 	}
 

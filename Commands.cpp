@@ -8,15 +8,28 @@
 #include "Commands.h"
 #include "ProgramController.h"
 
+void Command::OnAccept(void)
+{
+    acceptTime = microsec_clock::local_time();
+    arduinoPositionOnAccept = programController->footboard->states[GetChannel()].position;
+}
+
+// bool PositionCommand::Execute(void)
+void PositionCommand::OnAccept(void)
+{
+    Command::OnAccept();
+    bool result = programController->footboard->SendPositionCommandToArduino(channel, position, 40);
+}
+
 bool PositionCommand::IsExpired(void)
 {
-	if(expiredMemory)
-		return true;
+//	if(expiredMemory)
+//		return true;
 
 	// cout << (microsec_clock::local_time() - acceptTime).total_seconds() << endl;
 	if ((microsec_clock::local_time() - acceptTime).total_microseconds() > timeLimit * 1000000)
 	{
-		expiredMemory = true;
+//		expiredMemory = true;
 		return true;
 	}
 
@@ -30,24 +43,69 @@ bool PositionCommand::Kill(void)
 	return true;
 }
 
-bool PositionCommand::Execute(void)
+// bool PositionWithMaxForceCommand::Execute(void)
+void PositionWithMaxForceCommand::OnAccept(void)
 {
-	return programController->footboard->SendPositionCommandToArduino(channel, position, 40);
+    Command::OnAccept();
+	bool result = programController->footboard->SendPositionCommandToArduino(channel, position, optionalMaxForce);
 }
 
-bool PositionWithMaxForceCommand::Execute(void)
+// bool ForceCommand::Execute(void)
+void ForceCommand::OnAccept(void)
 {
-	return programController->footboard->SendPositionCommandToArduino(channel, position, optionalMaxForce);
+    Command::OnAccept();
+    // TODO: mettere a posto questo parametro 99
+    bool res = programController->footboard->SendForceCommandToArduino(channel, force, 99);
+}
+
+bool ForceCommand::IsPositionReached(void)
+{
+    // io, in quanto comando di forza, ho anche specificato una posizione, che era questa:
+    // int positionToReach = position;
+    int positionToReach = position * programController->footboard->positionConversionFactor;
+    // l'arduino e' arrivato qui:
+    int positionReached = programController->footboard->states[GetChannel()].position;
+    // le due posizioni sono in due scale diverse. Portiamole nella stessa scala
+    // int positionReachedByArduinoInHostScale = positionReachedByArduino / programController->footboard->positionCommandPositionConversionFactor;
+
+    // if(abs(positionToReach - positionReachedByArduinoInHostScale) < 0.1 * positiontoReach)
+    int sourceDeltaPos = positionReached - arduinoPositionOnAccept;
+    if (sourceDeltaPos >= 0) // devo sorpassare
+    {
+        if (positionReached >= positionToReach)
+        {
+//            expiredMemory = true;
+            cout << "channel " << GetChannel() << ", delta = "<< sourceDeltaPos << ", positionReached = "
+                    << positionReached << ", arduinoPositionOnAccept = " << arduinoPositionOnAccept << ", target pos reached, exiting" << endl;
+            return true;
+        }
+    }
+    else if (sourceDeltaPos <= 0)
+    {
+        if (positionReached <= positionToReach)
+        {
+//            expiredMemory = true;
+            cout << "channel " << GetChannel() << ", delta = "<< sourceDeltaPos << ", positionReached = "
+                    << positionReached << ", arduinoPositionOnAccept = " << arduinoPositionOnAccept << ", target pos reached, exiting" << endl;
+
+            return true;
+        }
+    }
+
+    // son sicuro che il papocchio qui sopra si puo' fare meglio assai...
+    // int targetDeltaPos = positionReached - positionToReach;
+
+    return false;
 }
 
 bool ForceCommand::IsExpired(void)
 {
 	if (PositionCommand::IsExpired())
 	{
-		// cout << "Exiting force command for timeout" << endl;
 		return true;
 	}
 
+#ifdef SPOSTATO
 	// io, in quanto comando di forza, ho anche specificato una posizione, che era questa:
 	// int positionToReach = position;
 	int positionToReach = position * programController->footboard->positionConversionFactor;
@@ -80,18 +138,45 @@ bool ForceCommand::IsExpired(void)
 		}
 	}
 
-	int targetDeltaPos = positionReached - positionToReach;
-
-
+	// son sicuro che il papocchio qui sopra si puo' fare meglio assai...
+	// int targetDeltaPos = positionReached - positionToReach;
 
 	return false;
+#endif
+	return IsPositionReached();
 }
 
-bool ForceCommand::Execute(void)
+bool ForceWithDeltaCommand::IsExpired(void)
 {
-	// TODO: mettere a posto questo 99
-	return programController->footboard->SendForceCommandToArduino(channel, force, 99);
+
+    // vale sempre che se siamo arrivati alla posizione giusta
+    // ci consideriamo soddisfatti e andiamo alla prossima istruzione
+    if(IsPositionReached())
+        return true;
+
+    // diversamente dagli altri comandi, pero', qui il timeout quando scade
+    // serve a far partire una seconda fase durante la quale alla pedana viene detto
+    // di rendere via via sempre piu' facile il compito
+    if (PositionCommand::IsExpired())
+    {
+        // qui dentro continuiamo a entrarci
+        if ((microsec_clock::local_time() - lastLoopTime).total_microseconds() > 1000000)
+        {
+            cout << "sbadabam" << endl;
+            lastLoopTime = microsec_clock::local_time();
+        }
+    }
+
+    return false;
 }
+
+// bool ForceWithDeltaCommand::Execute(void)
+void ForceWithDeltaCommand::OnAccept(void)
+{
+    Command::OnAccept();
+    cout << "ForceWithDeltaCommand Unimplemented Arduino Command" << endl;
+}
+
 
 bool SemaphoreCommand::IsExpired(void)
 {
@@ -105,8 +190,18 @@ bool SemaphoreCommand::IsExpired(void)
 	//bool isExpired0 = (!programController->footboard->actuators[0].actualCommand) || programController->footboard->actuators[0].actualCommand->IsExpired();
 	// bool isExpired1 = (!programController->footboard->actuators[1].actualCommand) || programController->footboard->actuators[1].actualCommand->IsExpired();
 
+    // modifico in modo che si ricordi se un canale ha finito o meno:
+    // porto queste due var locali a membri di classe
+    /*
 	bool isExpired0 = programController->footboard->actuators[0].IsCommandExpired();
 	bool isExpired1 = programController->footboard->actuators[1].IsCommandExpired();
+	*/
+
+    if(!isExpired0)
+        isExpired0 = programController->footboard->actuators[0].IsCommandExpired();
+
+    if(!isExpired0)
+        isExpired1 = programController->footboard->actuators[1].IsCommandExpired();
 
 	if (mode == "x")
 	{
@@ -143,11 +238,5 @@ bool SemaphoreCommand::IsExpired(void)
 	}
 
 	return true;
-}
-
-void Command::OnAccept(void)
-{
-	acceptTime = microsec_clock::local_time();
-	arduinoPositionOnAccept = programController->footboard->states[GetChannel()].position;
 }
 

@@ -20,7 +20,7 @@ class ProgramController;
 
 struct Command
 {
-	Command(void) : expiredMemory(false) {}
+	// Command(void) : expiredMemory(false) {}
 
 	virtual int GetChannel(void) { return -1; }
 
@@ -30,7 +30,7 @@ struct Command
 	virtual bool IsExpired(void) { return true; }
 	virtual bool Kill(void) { return true; }
 
-	virtual bool Execute(void) { return true; }
+	// virtual bool Execute(void) { return true; }
 	virtual void OnAccept(void);
 
 	ptime acceptTime;
@@ -48,7 +48,7 @@ struct Command
 	// prima dell'introduzione di questo flag, io potevo avere che CH0 era expired ma CH1 no, e se poi switchavano
 	// non si passava alla prossima istruzione. Vogliamo invece che si passi alla prossima istruzione.
 	// pero' e' meglio inscatolare tutto nel SemaphoreCommand
-	bool expiredMemory;
+	// bool expiredMemory;
 };
 
 struct PositionCommand: public Command
@@ -70,7 +70,8 @@ struct PositionCommand: public Command
 	virtual bool IsExpired(void);
 	virtual bool Kill(void);
 
-	virtual bool Execute(void);
+	// virtual bool Execute(void);
+    virtual void OnAccept(void);
 
 	int channel;
 	int position;
@@ -93,7 +94,8 @@ struct PositionWithMaxForceCommand: PositionCommand
 				+ lexical_cast<string>(optionalMaxForce);
 	}
 
-	virtual bool Execute(void);
+	// virtual bool Execute(void);
+    virtual void OnAccept(void);
 
 	int optionalMaxForce;
 };
@@ -114,7 +116,10 @@ struct ForceCommand: public PositionCommand
 	}
 
 	virtual bool IsExpired(void);
-	virtual bool Execute(void);
+	// virtual bool Execute(void);
+    virtual void OnAccept(void);
+
+	bool IsPositionReached(void);
 
 	int force;
 };
@@ -133,21 +138,28 @@ struct ForceWithDeltaCommand: public ForceCommand
 				+ "optDelta:" + lexical_cast<string>(optionalDelta);
 	}
 
-	virtual bool Execute(void) { cout << "Unimplemented Command" << endl; return true; }
+    virtual bool IsExpired(void);
+	// virtual bool Execute(void);
+    virtual void OnAccept(void);
 
 	int optionalDelta;
+    ptime lastLoopTime;
+
 };
 
 struct SemaphoreCommand: public Command
 {
 	SemaphoreCommand(const string& m) :
-			mode(m)
+			mode(m), isExpired0(false), isExpired1(false)
 	{
 	}
 
 	virtual string AsString(void) { return "s " + mode; }
 
 	virtual bool IsExpired(void);
+
+    bool isExpired0;
+    bool isExpired1;
 
 	string mode;
 };

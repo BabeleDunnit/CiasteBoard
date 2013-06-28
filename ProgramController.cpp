@@ -87,7 +87,7 @@ bool ProgramController::Run(void)
 		// cout << "exec command " << nextCommand->AsString() << endl;
 		if (footboard->Accept(nextCommand))
 		{
-			cout << "time: " << secondsFromStart << " - Executed command: " << nextCommand->AsString()
+			cout << "time: " << secondsFromStart << " - Accepted command: " << nextCommand->AsString()
 			<< endl << "------ command end ------\n" << endl;
 			++programCounter;
 			if (programCounter >= commands->size())

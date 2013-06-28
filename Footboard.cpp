@@ -271,7 +271,7 @@ bool Footboard::Accept(shared_ptr<Command> c)
 	// un S X alla fine del programma
 	if (c->IsExpired())
 	{
-		cout << "\n----- command start -----\n" << "Footboard accepts command: " << c->AsString()
+		cout << "\n----- command start -----\n" << "Footboard is accepting command: " << c->AsString()
 		<< " (line: " << c->lineNumber << ")" << endl;
 		c->OnAccept();
 		return true;
