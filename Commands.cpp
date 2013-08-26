@@ -200,7 +200,7 @@ bool SemaphoreCommand::IsExpired(void)
     if(!isExpired0)
         isExpired0 = programController->footboard->actuators[0].IsCommandExpired();
 
-    if(!isExpired0)
+    if(!isExpired1)
         isExpired1 = programController->footboard->actuators[1].IsCommandExpired();
 
 	if (mode == "x")
