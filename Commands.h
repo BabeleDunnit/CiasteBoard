@@ -103,7 +103,7 @@ struct PositionWithMaxForceCommand: PositionCommand
 struct ForceCommand: public PositionCommand
 {
 	ForceCommand(const int& c, const int& f, const int&p, const int& tl) :
-			PositionCommand(c, p, tl), force(f)
+			PositionCommand(c, p, tl), force(f), seekDirection(0)
 	{
 	}
 
@@ -122,6 +122,8 @@ struct ForceCommand: public PositionCommand
 	bool IsPositionReached(void);
 
 	int force;
+
+	int seekDirection; // positive if we are expected to get at higher pos value
 };
 
 struct ForceWithDeltaCommand: public ForceCommand
@@ -158,10 +160,9 @@ struct SemaphoreCommand: public Command
 
 	virtual bool IsExpired(void);
 
+	string mode;
     bool isExpired0;
     bool isExpired1;
-
-	string mode;
 };
 
 

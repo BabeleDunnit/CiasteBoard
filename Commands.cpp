@@ -50,16 +50,28 @@ void PositionWithMaxForceCommand::OnAccept(void)
 	bool result = programController->footboard->SendPositionCommandToArduino(channel, position, optionalMaxForce);
 }
 
-// bool ForceCommand::Execute(void)
+int CalculateMAXFLIM(void)
+{
+	return 99;
+}
+
 void ForceCommand::OnAccept(void)
 {
     Command::OnAccept();
     // TODO: mettere a posto questo parametro 99
-    bool res = programController->footboard->SendForceCommandToArduino(channel, force, 99);
+    bool res = programController->footboard->SendForceCommandToArduino(channel, force, CalculateMAXFLIM());
+    
+    // rember to fix conversion * programController->footboard->positionConversionFactor;
+    if (position >= programController->footboard->states[GetChannel()].position)
+    	seekDirection = 1;
+    else
+    	seekDirection = -1;
 }
 
 bool ForceCommand::IsPositionReached(void)
 {
+	assert(seekDirection != 0);
+
     // io, in quanto comando di forza, ho anche specificato una posizione, che era questa:
     // int positionToReach = position;
     int positionToReach = position * programController->footboard->positionConversionFactor;
@@ -69,23 +81,22 @@ bool ForceCommand::IsPositionReached(void)
     // int positionReachedByArduinoInHostScale = positionReachedByArduino / programController->footboard->positionCommandPositionConversionFactor;
 
     // if(abs(positionToReach - positionReachedByArduinoInHostScale) < 0.1 * positiontoReach)
-    int sourceDeltaPos = positionReached - arduinoPositionOnAccept;
-    if (sourceDeltaPos >= 0) // devo sorpassare
+    //int sourceDeltaPos = positionReached - arduinoPositionOnAccept;
+    if (seekDirection >= 0) // devo sorpassare
     {
         if (positionReached >= positionToReach)
         {
-//            expiredMemory = true;
-            cout << "channel " << GetChannel() << ", delta = "<< sourceDeltaPos << ", positionReached = "
+            cout << "channel " << GetChannel() << ", seekDir " << seekDirection << ", positionReached = "
                     << positionReached << ", arduinoPositionOnAccept = " << arduinoPositionOnAccept << ", target pos reached, exiting" << endl;
             return true;
         }
     }
-    else if (sourceDeltaPos <= 0)
+    else if (seekDirection <= 0)
     {
         if (positionReached <= positionToReach)
         {
 //            expiredMemory = true;
-            cout << "channel " << GetChannel() << ", delta = "<< sourceDeltaPos << ", positionReached = "
+            cout << "channel " << GetChannel() << ", seekDir " << seekDirection << ", positionReached = "
                     << positionReached << ", arduinoPositionOnAccept = " << arduinoPositionOnAccept << ", target pos reached, exiting" << endl;
 
             return true;
@@ -105,44 +116,6 @@ bool ForceCommand::IsExpired(void)
 		return true;
 	}
 
-#ifdef SPOSTATO
-	// io, in quanto comando di forza, ho anche specificato una posizione, che era questa:
-	// int positionToReach = position;
-	int positionToReach = position * programController->footboard->positionConversionFactor;
-	// l'arduino e' arrivato qui:
-	int positionReached = programController->footboard->states[GetChannel()].position;
-	// le due posizioni sono in due scale diverse. Portiamole nella stessa scala
-	// int positionReachedByArduinoInHostScale = positionReachedByArduino / programController->footboard->positionCommandPositionConversionFactor;
-
-	// if(abs(positionToReach - positionReachedByArduinoInHostScale) < 0.1 * positiontoReach)
-	int sourceDeltaPos = positionReached - arduinoPositionOnAccept;
-	if (sourceDeltaPos >= 0) // devo sorpassare
-	{
-		if (positionReached >= positionToReach)
-		{
-			expiredMemory = true;
-			cout << "channel " << GetChannel() << ", delta = "<< sourceDeltaPos << ", positionReached = "
-					<< positionReached << ", arduinoPositionOnAccept = " << arduinoPositionOnAccept << ", target pos reached, exiting" << endl;
-			return true;
-		}
-	}
-	else if (sourceDeltaPos <= 0)
-	{
-		if (positionReached <= positionToReach)
-		{
-			expiredMemory = true;
-			cout << "channel " << GetChannel() << ", delta = "<< sourceDeltaPos << ", positionReached = "
-					<< positionReached << ", arduinoPositionOnAccept = " << arduinoPositionOnAccept << ", target pos reached, exiting" << endl;
-
-			return true;
-		}
-	}
-
-	// son sicuro che il papocchio qui sopra si puo' fare meglio assai...
-	// int targetDeltaPos = positionReached - positionToReach;
-
-	return false;
-#endif
 	return IsPositionReached();
 }
 
@@ -164,9 +137,18 @@ bool ForceWithDeltaCommand::IsExpired(void)
         {
             cout << "sbadabam" << endl;
             lastLoopTime = microsec_clock::local_time();
-        }
-    }
+            // verifica che la nuova forza sia accettabile
+            force += optionalDelta;
+            cout << "Force : " << force << " channel: " << GetChannel() << endl;
 
+            // qui MAXFORCE dovra' essere calcolato con la ValidateForce()
+            if(force > programController->parser->fll || force <= 0) {
+            	cout << "Hit force limits for channel : " << GetChannel() << endl;
+            	// fai anche un beep
+            	return true;
+            }
+         }
+    }
     return false;
 }
 
@@ -174,7 +156,9 @@ bool ForceWithDeltaCommand::IsExpired(void)
 void ForceWithDeltaCommand::OnAccept(void)
 {
     Command::OnAccept();
-    cout << "ForceWithDeltaCommand Unimplemented Arduino Command" << endl;
+    lastLoopTime = microsec_clock::local_time();
+    bool res = programController->footboard->SendForceCommandToArduino(channel, force, 99);
+    cout << "ForceWithDeltaCommand ALMOST implemented Arduino Command" << endl;
 }
 
 

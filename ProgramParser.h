@@ -32,13 +32,13 @@ public:
 	bool ParseForceCommand(const vector<string>& tokens);
 	bool ParsePositionCommand(const vector<string>& tokens);
 	bool ParseSemaphoreCommand(const vector<string>& tokens);
+	// bool ParseThresholdCommand(const vector<string>& tokens);
 
 	int fdl;
 	int fll;
 	int pdf;
 
 	shared_ptr<vector<shared_ptr<Command> > > commands;
-	// shared_ptr<Command> lastParsedCommand;
 
 	int parsedLineNum;
 
