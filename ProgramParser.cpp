@@ -9,8 +9,8 @@
 #include "ProgramController.h"
 #include "Commands.h"
 
-#include<boost/tokenizer.hpp>
-#include<boost/algorithm/string.hpp>
+#include <boost/tokenizer.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <iostream>

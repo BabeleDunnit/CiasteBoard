@@ -11,6 +11,8 @@
 #include "ProgramController.h"
 #include "ProgramParser.h"
 
+#include "Sound.h"
+
 /*
  * History
  * 20130430 vediamo i comandi di forza
@@ -112,6 +114,7 @@ int main(void)
     	controller->footboard->GetStateFromArduino();
 
     cout << "Execution Start!" << endl;
+    Sound("claxon.wav").Play();
 	controller->Run();
 
 	cout << "Program End" << endl;
