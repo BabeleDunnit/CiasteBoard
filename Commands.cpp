@@ -31,10 +31,13 @@ bool PositionCommand::IsExpired(void)
 	// qui faccio il controllo se la posizione e' all'interno del range, ammesso che questo sia
 	// abilitato, ed eventualmente beeppo
 
+	assert(channel == 0 || channel == 1);
+
 	bool enabledLow = programController->parser->thresholds[channel][0] != -1;
 	bool enabledHigh = programController->parser->thresholds[channel][1] != -1;
-	bool isLower =  position < programController->parser->thresholds[channel][0];
-	bool isHigher =  position > programController->parser->thresholds[channel][1];
+	int positionNow = programController->footboard->states[channel].position;
+	bool isLower = positionNow < programController->parser->thresholds[channel][0];
+	bool isHigher = positionNow > programController->parser->thresholds[channel][1];
 
 	if((enabledLow && isLower) || (enabledHigh && isHigher))
 	{

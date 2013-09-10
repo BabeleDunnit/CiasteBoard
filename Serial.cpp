@@ -50,7 +50,7 @@ bool Serial::Open(const string& serialName)
 	printf("fd opened as %i\n", fd);
 
 	/* wait for the Arduino to reboot */
-	usleep(2000000);
+	usleep(3000000);
 
 	/* get current serial port settings */
 	tcgetattr(fd, &toptions);
@@ -67,18 +67,20 @@ bool Serial::Open(const string& serialName)
     // no flow control
     // toptions.c_cflag &= ~CRTSCTS;
 
-    //toptions.c_cflag &= ~HUPCL; // disable hang-up-on-close to avoid reset
+    // toptions.c_cflag &= ~HUPCL; // disable hang-up-on-close to avoid reset
     //toptions.c_cflag |= CREAD | CLOCAL;  // turn on READ & ignore ctrl lines
     toptions.c_iflag &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl
     // No line processing:
     // echo off, echo newline off, canonical mode off, 
     // extended input processing off, signal chars off
+#ifdef STACIPPA
     toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | IEXTEN | ISIG); // make raw
     toptions.c_oflag &= ~OPOST; // make raw
 
     // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
     toptions.c_cc[VMIN]  = 14; // assuming 6 numbers each 1 byte plus CR LF
     toptions.c_cc[VTIME] = 1; // i might be too big 1=0.1 seconds!
+#endif
     
 	/* commit the serial port settings */
 	tcsetattr(fd, TCSANOW, &toptions);
@@ -105,16 +107,22 @@ bool Serial::Open(const string& serialName)
 */
 
 	//is it set as we asked for?
-	struct termios toptionVerif;
-	tcgetattr(fd, &toptionVerif);
+	// struct termios toptionVerif;
+	// tcgetattr(fd, &toptionVerif);
 //	if ( StructComparator( toptions, toptionVerif) == 0)
 //		cout << "Damn! i told you attributes where messed up!" << endl;
 
 	// assert(memcmp(&toptions, &toptionVerif, sizeof(toptions)) == 0);
 
+	// se flushi NON VA PIU' UN CAZZO (su arduino di aaron, in emulazione protocollo)
+
+	/*
 	if (tcflush( fd, TCIOFLUSH) != 0) 
 		 perror("tcflush error");
-	 
+	*/
+
+	// usleep(2000000);
+
 	return true;
 }
 
