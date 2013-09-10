@@ -22,6 +22,7 @@ ProgramParser::ProgramParser(shared_ptr<ProgramController> pc) :
 		programController(pc)
 {
 	fdl = fll = pdf = -1;
+	thresholds[0][0] = thresholds[0][1] = thresholds[1][0] = thresholds[1][1] = -1;
 	commands.reset(new vector<shared_ptr<Command> >);
 }
 
@@ -125,6 +126,11 @@ bool ProgramParser::ParseProgram(const string& path)
 			if (!ParseSemaphoreCommand(tokens))
 				return false;
 		}
+		else if(tokens[0] == "threshold")
+		{
+			if (!ParseThresholdCommand(tokens))
+				return false;
+		}
 		else
 		{
 			cout << "ERROR: unrecognized command at line " << parsedLineNum << endl;
@@ -190,7 +196,6 @@ bool ProgramParser::ParseForceCommand(const vector<string>& tokens)
 	else
 		cmd = new ForceCommand(channel, force, position, timelimit);
 
-	//shared_ptr<Command> fc(cmd);
 	shared_ptr<Command> lastParsedCommand(cmd);
 	commands->push_back(lastParsedCommand);
 	lastParsedCommand->programController = programController;
@@ -218,8 +223,6 @@ bool ProgramParser::ParsePositionCommand(const vector<string>& tokens)
 	else
 		cmd = new PositionCommand(channel, position, timelimit);
 
-//	shared_ptr<Command> pc(cmd);
-//	commands->push_back(pc);
 	shared_ptr<Command> lastParsedCommand(cmd);
 	commands->push_back(lastParsedCommand);
 	lastParsedCommand->programController = programController;
@@ -230,8 +233,6 @@ bool ProgramParser::ParsePositionCommand(const vector<string>& tokens)
 bool ProgramParser::ParseSemaphoreCommand(const vector<string>& tokens)
 {
 	assert(tokens[0] == "s");
-//	shared_ptr<Command> sc(new SemaphoreCommand(tokens[1]));
-//	commands->push_back(sc);
 
 	shared_ptr<Command> lastParsedCommand(new SemaphoreCommand(tokens[1]));
 	commands->push_back(lastParsedCommand);
@@ -239,4 +240,39 @@ bool ProgramParser::ParseSemaphoreCommand(const vector<string>& tokens)
 	lastParsedCommand->lineNumber = parsedLineNum;
 	return true;
 }
+
+bool ProgramParser::ParseThresholdCommand(const vector<string>& tokens)
+{
+	assert(tokens[0] == "threshold");
+	if (tokens.size() != 4 && tokens.size() != 3)
+	{
+		cout << "ERROR: malformed P command at line " << parsedLineNum << endl;
+		return false;
+	}
+
+	int channel = -1;
+	if(tokens[1] == "chan0")
+		channel = 0;
+	else if (tokens[1] == "chan1")
+		channel = 1;
+
+	int position = lexical_cast<int>(tokens[2]);
+
+	int where = -1;
+	if(tokens.size() == 4)
+	{
+		if(tokens[3] == "up")
+			where = 1;
+		else if (tokens[3] == "down")
+			where = 0;
+	}
+
+
+	shared_ptr<Command> lastParsedCommand(new ThresholdCommand(channel, position, where));
+	commands->push_back(lastParsedCommand);
+	lastParsedCommand->programController = programController;
+	lastParsedCommand->lineNumber = parsedLineNum;
+	return true;
+}
+
 

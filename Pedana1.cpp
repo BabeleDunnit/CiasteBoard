@@ -97,26 +97,34 @@ int main(void)
 	}
 #endif
 
-
+	// {
 	shared_ptr<ProgramController> controller(new ProgramController);
-	controller->Init();
+	if(!controller->Init())
+		exit(-1);
 
     string serialName = controller->parser->options.get<string>("serial");
     if(serialName.length())
     {
 		cout << "Arduino expected on serial " << serialName << endl;
 		controller->footboard->serial.Open(serialName);
+		cout << "Serial opened" << endl;
 	    usleep(1000000);
     }
 
+    cout << "Now reading from serial" << endl;
     // leggiamo un po' di roba per sincronizzarci e svuotare il buffer
     for(int i = 0; i < 8; i++)
     	controller->footboard->GetStateFromArduino();
 
     cout << "Execution Start!" << endl;
-    Sound("claxon.wav").Play();
+    // Sound("claxon.wav").Play();
+    controller->claxon->Play();
 	controller->Run();
 
+	// controller.reset(NULL);
+	// controller->footboard->serial.Close();
+	// }
+	// XXX TODO per quale MINCHIA di ragione non vengono chiamati i distruttori???
 	cout << "Program End" << endl;
 
 	return 0;

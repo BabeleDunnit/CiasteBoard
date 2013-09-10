@@ -36,9 +36,9 @@ bool Serial::Open(const string& serialName)
 	struct termios toptions;
 
 	/* open serial port */
-	 fd = open(serialName.c_str(), O_RDWR | O_NOCTTY );  //THIS is blocking... then
+	fd = open(serialName.c_str(), O_RDWR | O_NOCTTY );  //THIS is blocking... then
 	// fd = open(serialName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
-	//fd = open(serialName.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+	// fd = open(serialName.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
 /*	long flag = fcntl(fd, F_GETFL, 0 );
 	fcntl(fd,F_SETFL,O_NONBLOCK);*/
 	if(fd < 0)
@@ -121,6 +121,13 @@ bool Serial::Open(const string& serialName)
 Serial::~Serial()
 {
 	// TODO Auto-generated destructor stub
+	if (tcflush( fd, TCIOFLUSH) != 0)
+		 perror("tcflush error");
+	close(fd);
+}
+
+void Serial::Close()
+{
 	if (tcflush( fd, TCIOFLUSH) != 0)
 		 perror("tcflush error");
 	close(fd);

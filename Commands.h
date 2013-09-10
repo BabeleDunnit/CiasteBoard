@@ -51,6 +51,29 @@ struct Command
 	// bool expiredMemory;
 };
 
+struct ThresholdCommand: public Command
+{
+	ThresholdCommand(const int& c, const int& p, const int& d) :
+				channel(c), position(p), where(d)
+		{
+		}
+
+	virtual int GetChannel(void) { return channel; }
+	virtual string AsString(void)
+		{
+			return "threshold ch:" +lexical_cast<string>(channel) + " pos:" + lexical_cast<string>(position)
+					+ " where:" + lexical_cast<string>(where);
+		}
+
+	virtual void OnAccept(void);
+
+	int channel;
+	int position;
+
+	// down = 0, up = 1;
+	int where;
+};
+
 struct PositionCommand: public Command
 {
 	PositionCommand(const int& c, const int& p, const int& tl) :
@@ -116,7 +139,6 @@ struct ForceCommand: public PositionCommand
 	}
 
 	virtual bool IsExpired(void);
-	// virtual bool Execute(void);
     virtual void OnAccept(void);
 
 	bool IsPositionReached(void);
@@ -141,7 +163,6 @@ struct ForceWithDeltaCommand: public ForceCommand
 	}
 
     virtual bool IsExpired(void);
-	// virtual bool Execute(void);
     virtual void OnAccept(void);
 
 	int optionalDelta;

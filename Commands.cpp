@@ -23,14 +23,22 @@ void PositionCommand::OnAccept(void)
 
 bool PositionCommand::IsExpired(void)
 {
-//	if(expiredMemory)
-//		return true;
-
-	// cout << (microsec_clock::local_time() - acceptTime).total_seconds() << endl;
 	if ((microsec_clock::local_time() - acceptTime).total_microseconds() > timeLimit * 1000000)
 	{
-//		expiredMemory = true;
 		return true;
+	}
+
+	// qui faccio il controllo se la posizione e' all'interno del range, ammesso che questo sia
+	// abilitato, ed eventualmente beeppo
+
+	bool enabledLow = programController->parser->thresholds[channel][0] != -1;
+	bool enabledHigh = programController->parser->thresholds[channel][1] != -1;
+	bool isLower =  position < programController->parser->thresholds[channel][0];
+	bool isHigher =  position > programController->parser->thresholds[channel][1];
+
+	if((enabledLow && isLower) || (enabledHigh && isHigher))
+	{
+		programController->claxon->Play();
 	}
 
 	return false;
@@ -70,7 +78,8 @@ void ForceCommand::OnAccept(void)
 
 bool ForceCommand::IsPositionReached(void)
 {
-	assert(seekDirection != 0);
+	// in test senza arduino scatta sempre
+	// assert(seekDirection != 0);
 
     // io, in quanto comando di forza, ho anche specificato una posizione, che era questa:
     // int positionToReach = position;
@@ -223,4 +232,21 @@ bool SemaphoreCommand::IsExpired(void)
 
 	return true;
 }
+
+void ThresholdCommand::OnAccept(void)
+{
+	Command::OnAccept();
+	if(where == -1)
+	{
+		programController->parser->thresholds[channel][0] = -1;
+		programController->parser->thresholds[channel][1] = -1;
+		cout << "thresholds[" << channel << "] reset to -1" << endl;
+	}
+	else
+	{
+		programController->parser->thresholds[channel][where] = position;
+		cout << "thresholds[" << channel << "][" << where << "] set to " << position << endl;
+	}
+}
+
 

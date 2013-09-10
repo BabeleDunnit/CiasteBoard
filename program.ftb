@@ -1,5 +1,15 @@
 
-0 F 200 800 7 30
-1 F 200 800 9 30
+
+#trigger <nome> <stato> <canale> <condizione> <azione>
+#trigger 1 on chan0 position high 300 playsound pippo.wav
+#trigger 1 off
+
+threshold chan0 300 up
+threshold chan0 100 down
+0 P 200 10
+1 P 200 10
+0 F 100 999 20 -90
+1 F 100 999 20 -90
+
 
 # S X questo e' generato automaticamente (ci vuole sempre)

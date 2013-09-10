@@ -32,11 +32,27 @@ public:
 	bool ParseForceCommand(const vector<string>& tokens);
 	bool ParsePositionCommand(const vector<string>& tokens);
 	bool ParseSemaphoreCommand(const vector<string>& tokens);
-	// bool ParseThresholdCommand(const vector<string>& tokens);
+
+	bool ParseThresholdCommand(const vector<string>& tokens);
+
+	// qui l'idea sarebbe parsare una cosa del genere
+	// trigger <nome> <stato> <canale> <condizione> <azione>
+	// trigger 1 on chan0 position high 300 playsound pippo.wav
+	// trigger 1 off
+	// bool ParseTriggerCommand(const vector<string>& tokens);
+	// bool ParseTriggerCondition()
 
 	int fdl;
 	int fll;
 	int pdf;
+
+	// int upperThreshold[2];
+	// int lowerThreshold[2];
+
+	// primo indice: canale
+	// secondo indice: 0 = down(giu), 1 = up(su)
+	// quando non vogliamo tenerne conto ci schiaffiamo dentro -1
+	int thresholds[2][2];
 
 	shared_ptr<vector<shared_ptr<Command> > > commands;
 

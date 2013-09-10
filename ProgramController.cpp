@@ -16,12 +16,14 @@ ProgramController::ProgramController() :
 	loopTime = lastLogArduinoDataTime = boost::posix_time::microsec_clock::local_time();
 	samplingLogFile.open("sampling.log");
 	completeLogFile.open("complete.log");
+	claxon.reset(new Sound("claxon.wav"));
 }
 
 ProgramController::~ProgramController()
 {
 	samplingLogFile.close();
 	completeLogFile.close();
+	cout << "ProgramController dtor" << endl;
 }
 
 bool ProgramController::Run(void)
@@ -104,7 +106,12 @@ bool ProgramController::Run(void)
 bool ProgramController::Init(void)
 {
 	parser.reset(new ProgramParser(shared_from_this()));
-	parser->ParseProgram("program.ftb");
+	bool res = parser->ParseProgram("program.ftb");
+	if(!res)
+	{
+		cout << "PARSE ERROR on program.ftb, line " << parser->parsedLineNum << endl;
+		return false;
+	}
     parser->ParseOptions("options.json");
 	footboard.reset(new Footboard(shared_from_this()));
 	commands = parser->commands;

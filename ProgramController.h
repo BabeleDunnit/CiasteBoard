@@ -11,6 +11,7 @@
 
 #include "ProgramParser.h"
 #include "Footboard.h"
+#include "Sound.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 using namespace boost::posix_time;
@@ -58,6 +59,8 @@ public:
     ofstream completeLogFile;
     void LogArduinoDataOnStream(ostream&);
     void LogArduinoDataOnStreamNoLoops(ostream&);
+
+    shared_ptr<Sound> claxon;
 };
 
 #endif /* PROGRAMCONTROLLER_H_ */

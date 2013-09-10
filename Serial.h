@@ -21,6 +21,7 @@ public:
 	virtual ~Serial();
 
 	bool Open(const string& serialName);
+	void Close();
 	int Write(const void* buf, size_t len);
 
 	// int Read(void* buf, size_t len);
