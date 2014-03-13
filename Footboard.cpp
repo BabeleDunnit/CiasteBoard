@@ -187,8 +187,6 @@ int Footboard::GetStateFromArduino(void)
     return 1;
 }
 
-
-
 char arduinoCommandBuffer[64];
 
 bool Footboard::SendForceCommandToArduino(const int& channel, const int& force, const int& maxForce)
@@ -255,10 +253,16 @@ bool Footboard::SendPositionCommandToArduino(const int& channel_, const int& pos
 
 bool Footboard::Accept(shared_ptr<Command> c)
 {
+	if(!c)
+		return false;
+
 	int channel = c->GetChannel();
 	if (channel != -1)
 	{
-		return actuators[channel].Accept(c);
+		bool accepted = actuators[channel].Accept(c);
+		if(accepted)
+			programController->acceptedCommand = c;
+		return accepted;
 	}
 
 	// se arriviamo qui e' un comando per la footboard
@@ -274,6 +278,7 @@ bool Footboard::Accept(shared_ptr<Command> c)
 		cout << "\n----- command start -----\n" << "Footboard is accepting command: " << c->AsString()
 		<< " (line: " << c->lineNumber << ")" << endl;
 		c->OnAccept();
+		programController->acceptedCommand = c;
 		return true;
 	}
 

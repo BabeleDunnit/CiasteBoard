@@ -1,27 +1,31 @@
 
-
+# possibile bella idea, la mettiamo via
 #trigger <nome> <stato> <canale> <condizione> <azione>
 #trigger 1 on chan0 position high 300 playsound pippo.wav
 #trigger 1 off
 
-threshold chan0 500 up
-threshold chan0 250 down
+# urca, sta roba non me la ricordavo neanche, e neanche i suoni
+#threshold chan0 500 up
+#threshold chan0 250 down
 
+# baco: il primo comando su canale 0 e' lunghissimo, e imballa l'esecuzione del successivo sullo stesso canale.
+# quindi vengono eseguiti solo i primi due comandi e poi non si muove più nulla
+0 P 200 40
+1 P 200 10
+0 P 200 10
+1 P 200 10
 0 P 200 10
 1 P 200 10
 
-0 P 400 5
-1 P 400 5
+# testiamo il raggiungimento contemporaneo del semaforo da entrambi i canali
+S X
 
+0 P 200 40
+1 P 200 10
 0 P 200 10
 1 P 200 10
-
-0 P 20 10
-1 P 20 10
-
-
-0 F 100 999 20 -90
-1 F 100 999 20 -90
+0 P 200 10
+1 P 200 10
 
 
 # S X questo e' generato automaticamente (ci vuole sempre)
