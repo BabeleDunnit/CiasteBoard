@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # F DL <F limit>  max force difference
 # F LL <F limit> max sum of pressures on both ch
 # P DF <value>  max distance across platforms
@@ -33,4 +34,36 @@ F LL 400
 # S X
 # 0 P 15 1
 # 1 P 15 1
+=======
+
+# possibile bella idea, la mettiamo via
+#trigger <nome> <stato> <canale> <condizione> <azione>
+#trigger 1 on chan0 position high 300 playsound pippo.wav
+#trigger 1 off
+
+# urca, sta roba non me la ricordavo neanche, e neanche i suoni
+#threshold chan0 500 up
+#threshold chan0 250 down
+
+# baco: il primo comando su canale 0 e' lunghissimo, e imballa l'esecuzione del successivo sullo stesso canale.
+# quindi vengono eseguiti solo i primi due comandi e poi non si muove più nulla
+0 P 200 40
+1 P 200 10
+0 P 200 10
+1 P 200 10
+0 P 200 10
+1 P 200 10
+
+# testiamo il raggiungimento contemporaneo del semaforo da entrambi i canali
+S X
+
+0 P 200 40
+1 P 200 10
+0 P 200 10
+1 P 200 10
+0 P 200 10
+1 P 200 10
+
+
+>>>>>>> a33c926... fix baco blocco comandi sull' 'altro' canale
 # S X questo e' generato automaticamente (ci vuole sempre)

@@ -186,8 +186,6 @@ int Footboard::GetStateFromArduino(void)
     return 1;
 }
 
-
-
 char arduinoCommandBuffer[64];
 
 bool Footboard::SendForceCommandToArduino(const int& channel, const int& force, const int& maxForce)
@@ -260,18 +258,28 @@ bool Footboard::SendPositionCommandToArduino(const int& channel_, const int& pos
 
 bool Footboard::Accept(shared_ptr<Command> c)
 {
+	if(!c)
+		return false;
+
 	int channel = c->GetChannel();
 
 //	cout << "Evaluating cmd: " << c->AsString() << " Channel: " << channel << endl;
 
 	if (channel != -1)
 	{
+/* <<<<<<< HEAD
 		actuators[(channel+1)%2].IsCommandExpired();  //prova di luca
 		bool ret = actuators[channel].Accept(c);
 		if (ret == true)
 			programController->completeLogFile << "\n----- command start -----\n" << "Actuator is accepting command: "
 					<< c->AsString() << " (line: " << c->lineNumber << ")" << endl;
 		return ret;
+======= */
+		bool accepted = actuators[channel].Accept(c);
+		if(accepted)
+			programController->acceptedCommand = c;
+		return accepted;
+// >>>>>>> a33c926... fix baco blocco comandi sull' 'altro' canale
 	}
 
 	// se arriviamo qui e' un comando per la footboard
@@ -288,6 +296,7 @@ bool Footboard::Accept(shared_ptr<Command> c)
 		cout << "\n----- command start -----\n" << "Footboard is accepting command: " << c->AsString()
 		<< " (line: " << c->lineNumber << ")" << endl;
 		c->OnAccept();
+		programController->acceptedCommand = c;
 		return true;
 	}
 

@@ -38,9 +38,11 @@ public:
     shared_ptr<ProgramParser> parser;
     shared_ptr<Footboard> footboard;
 
-    // bool ExecuteNextCommand(void);
     shared_ptr<vector<shared_ptr<Command> > > commands;
-    int programCounter;
+    int programCounter[2];
+    shared_ptr<Command> acceptedCommand;
+
+    shared_ptr<Command> FindNextCommand(const int& channel, int& nextCommandIdx);
 
     // time all'inizio del loop
     ptime loopTime;
