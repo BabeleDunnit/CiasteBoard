@@ -9,6 +9,7 @@
 #include "ProgramParser.h"
 #include "Commands.h"
 
+
 #include <iostream>
 using namespace std;
 
@@ -20,7 +21,6 @@ Actuator::~Actuator()
 {
 }
 
-const float THRESHOLD = 0.05;
 
 bool Actuator::Accept(shared_ptr<Command> c)
 {
@@ -33,7 +33,9 @@ bool Actuator::Accept(shared_ptr<Command> c)
 	{
 		cout << "\n----- command start -----\n" << "Actuator is accepting command: "
 				<< c->AsString() << " (line: " << c->lineNumber << ")" << endl;
+
 		actualCommand = c;
+//		programController->completeLogFile << "Accepting " << c->AsString() << "\\r\\n" << endl;
 		// actualCommand->acceptTime = microsec_clock::local_time();
 		actualCommand->OnAccept();
 		// actualCommand->Execute();
@@ -44,6 +46,7 @@ bool Actuator::Accept(shared_ptr<Command> c)
 }
 
 /*
+const float THRESHOLD = 0.05;
 bool Actuator::AddState(const int& force, const int& position)
 {
 	PIDValue = positionPID.AddValue(position);

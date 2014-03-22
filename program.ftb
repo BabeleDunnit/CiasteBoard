@@ -1,3 +1,40 @@
+<<<<<<< HEAD
+# F DL <F limit>  max force difference
+# F LL <F limit> max sum of pressures on both ch
+# P DF <value>  max distance across platforms
+# i parametri tra < e > sono necessari, quelli invece tra [ e ] sono opzionali
+# <ch> F <force> <position>_<timelimit> [delta]
+# <ch> P <position> <timelimit> [maxforce]
+# threshold <chan0/chan1> <position> <up/down> per mettere allarme
+# threshold <chan0/chan1> <position> per toglierli tutti?
+#sostituto di forza pura, fa forza 300 se non lo lasci salire fino in cima collassa dopo 10-11 sec
+#0 F 300  999 10 -99
+F LL 400
+# timeout di accensione
+0 P 1 8
+1 P 1 8
+# ok si balla ------------------------------------ INIZIO
+0 P 150 10
+1 P 150 10
+0 F 60 130 300 -99
+1 F 60 130 300 -99
+0 P 10 3
+1 P 10 3
+0 P 150 20
+0 P 10 10
+0 P 150 20
+0 P 10 10
+0 P 150 20
+0 P 10 10
+1 P 10 3
+1 P 150 20
+1 P 10 10
+1 P 150 20
+1 P 10 10
+# S X
+# 0 P 15 1
+# 1 P 15 1
+=======
 
 # possibile bella idea, la mettiamo via
 #trigger <nome> <stato> <canale> <condizione> <azione>
@@ -28,4 +65,5 @@ S X
 1 P 200 10
 
 
+>>>>>>> a33c926... fix baco blocco comandi sull' 'altro' canale
 # S X questo e' generato automaticamente (ci vuole sempre)

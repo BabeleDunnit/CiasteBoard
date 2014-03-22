@@ -1,10 +1,27 @@
-# pippo Caro Aaron questo testo E' GIA UN PROGRAMMA
+# Caro Aaron questo testo E' GIA UN PROGRAMMA
 # ------------------------------ CMD LINE structure
 # F DL <F limit>  max force difference
-# F LL <F limit> max sum of pressures on both ch
+# F LL <F limit> max sum of pressures on both ch _> per ora e' anche limite forza
 # P DF <value>  max distance across platforms
-# <ch> <F>_<force>_<position>_<timelimit> [delta]
-# <ch> <P>_<position>_<timelimit> [maxforce]
+#
+# <ch> F <force> <position> <timelimit> [delta]
+# <ch> P <position> <timelimit> [maxforce]
+#
+#  syntax:
+#  <ch> F <force> <position> <timelimit> [delta]
+#   ranges:  force -99,99     position 0,999  timelimit 0,9999  delta -99,99 
+#   NOTA delta a 0 significa mantieni la forza costante: solo un semaforo puo far ripartire  il  programma
+#
+#  <ch> P <lenght> <time>  [maxF1]
+#   ranges:  lenght 0-1023  pos1 0-1023   maxF1 0-99
+#
+# i parametri tra < e > sono necessari, quelli invece tra [ e ] sono opzionali, <ch> indica il canale (sono validi solo 0 e 1)
+#
+# threshold <chan0/chan1> <position> <up/down> per mettere allarme
+# threshold <chan0/chan1> <position> per toglierli tutti?
+#
+#
+#   SEMAFORO
 #
 # S N    la prima riga che e' terminata fa saltare la successiva
 #        (quando uno dei 2 ch finisce tronca l'altro)
@@ -17,12 +34,6 @@
 #1 P 200 60
 #S N
 #
-#  format:
-#  n F <force> <position> <timelimit> [delta]
-#   ranges:  force -99,99     position 0,999  timelimit 0,9999  delta -99,99
-#
-#  n P <lenght> <time>  [maxF1]
-#   ranges:  lenght 0-1023  pos1 0-1023   maxF1 0-99
 #
 #
 # nota che i valori seguenti probabilmente andranno convertiti in Kilogrammi e millimetri, quindi servira' valore di conversione

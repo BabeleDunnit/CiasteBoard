@@ -97,7 +97,7 @@ int main(void)
 	}
 #endif
 
-	// {
+
 	shared_ptr<ProgramController> controller(new ProgramController);
 	if(!controller->Init())
 		exit(-1);
@@ -125,6 +125,7 @@ int main(void)
 	// controller->footboard->serial.Close();
 	// }
 	// XXX TODO per quale MINCHIA di ragione non vengono chiamati i distruttori???
+
 	cout << "Program End" << endl;
 
 	return 0;

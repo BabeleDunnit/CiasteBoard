@@ -5,6 +5,21 @@
  *      Author: brancotti
  */
 
+
+
+// 		Comandi di forza
+
+//	<ch> F <force> <targetPos> <timelimit> [delta]
+
+// nota il comando "applica una forza per tot secondi si compone cosi:
+// <ch> F <force> <999> <timelimit> <-99>
+
+
+//		Comandi di posizione
+//	<ch> P <position> <timelimit> [maxForce]
+
+
+
 #include "ProgramParser.h"
 #include "ProgramController.h"
 #include "Commands.h"
@@ -185,9 +200,9 @@ bool ProgramParser::ParseForceCommand(const vector<string>& tokens)
 		return false;
 	}
 
-	int channel = lexical_cast<int>(tokens[0]);
-	int force = lexical_cast<int>(tokens[2]);
-	int position = lexical_cast<int>(tokens[3]);
+	int channel   = lexical_cast<int>(tokens[0]);
+	int force 	  = lexical_cast<int>(tokens[2]);
+	int position  = lexical_cast<int>(tokens[3]);
 	int timelimit = lexical_cast<int>(tokens[4]);
 
 	Command* cmd = NULL;
@@ -195,6 +210,7 @@ bool ProgramParser::ParseForceCommand(const vector<string>& tokens)
 		cmd = new ForceWithDeltaCommand(channel, force, position, timelimit, lexical_cast<int>(tokens[5]));
 	else
 		cmd = new ForceCommand(channel, force, position, timelimit);
+
 
 	shared_ptr<Command> lastParsedCommand(cmd);
 	commands->push_back(lastParsedCommand);
@@ -223,6 +239,7 @@ bool ProgramParser::ParsePositionCommand(const vector<string>& tokens)
 	else
 		cmd = new PositionCommand(channel, position, timelimit);
 
+
 	shared_ptr<Command> lastParsedCommand(cmd);
 	commands->push_back(lastParsedCommand);
 	lastParsedCommand->programController = programController;
@@ -233,6 +250,7 @@ bool ProgramParser::ParsePositionCommand(const vector<string>& tokens)
 bool ProgramParser::ParseSemaphoreCommand(const vector<string>& tokens)
 {
 	assert(tokens[0] == "s");
+
 
 	shared_ptr<Command> lastParsedCommand(new SemaphoreCommand(tokens[1]));
 	commands->push_back(lastParsedCommand);

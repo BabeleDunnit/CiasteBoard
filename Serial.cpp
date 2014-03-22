@@ -20,7 +20,8 @@
 
 #define DEBUG 1
 
-#define BAUDRATE B38400
+//#define BAUDRATE B38400
+#define BAUDRATE B57600
 
 #include "Serial.h"
 
@@ -31,60 +32,70 @@ Serial::Serial(void)
 
 bool Serial::Open(const string& serialName)
 {
-	// int fd, n, i;
-	// char buf[64] = "temp text";
-	struct termios toptions;
 
-	/* open serial port */
-	fd = open(serialName.c_str(), O_RDWR | O_NOCTTY );  //THIS is blocking... then
-	// fd = open(serialName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
-	// fd = open(serialName.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
-/*	long flag = fcntl(fd, F_GETFL, 0 );
-	fcntl(fd,F_SETFL,O_NONBLOCK);*/
-	if(fd < 0)
-	{
-		cout << "ERROR opening Arduino port:" << serialName << endl;
+	struct termios toptions;
+	struct termios opts_read;
+	
+	/* open serial port */								// O_RDONLY read only
+	fd = open(serialName.c_str(), O_RDWR | O_NOCTTY | O_LARGEFILE |O_NONBLOCK );  	//RDWR per leggi-e-scrivi
+	 	// fd = open(serialName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+	 	// fd = open(serialName.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+	 	/*	long flag = fcntl(fd, F_GETFL, 0 );
+	 	fcntl(fd,F_SETFL,O_NONBLOCK);*/
+	if(fd < 0) 	{
+		cout << "ERROR opening Connection port:" << serialName << endl;
 		exit(-1);
 	}
 
 	printf("fd opened as %i\n", fd);
 
-	/* wait for the Arduino to reboot */
-	usleep(3000000);
+	/* wait for the Arduino to reboot here?*/
 
-	/* get current serial port settings */
-	tcgetattr(fd, &toptions);
-	/* set  baud both ways */
-	cfsetispeed(&toptions, BAUDRATE);
-	cfsetospeed(&toptions, BAUDRATE);
-	/* 8 bits, no parity, no stop bits */
+	if (tcflush( fd, TCIOFLUSH) != 0)  perror("tcflush error");
+	
+	toptions.c_iflag = 0;		// CS8 8 bit
+	toptions.c_oflag = 0;		// nothing set for output
+	toptions.c_oflag &= ~OPOST;	//ecept for raw output
 	toptions.c_cflag &= ~PARENB;
 	toptions.c_cflag &= ~CSTOPB;
 	toptions.c_cflag &= ~CSIZE;
-	toptions.c_cflag |= CS8;
-	/* Canonical mode */
-	toptions.c_lflag |= ICANON;
-    // no flow control
-    // toptions.c_cflag &= ~CRTSCTS;
+ 	toptions.c_cflag = CS8| CREAD| CLOCAL;  //CLOCAL ignore status lines //CREAD enable receiver
+	//toptions.c_lflag |= ICANON;    		//under investigation
+	toptions.c_lflag &= ~( ICANON |ECHO|ISIG); // Raw input no echo
+	
+	cfsetispeed(&toptions, BAUDRATE);
+	cfsetospeed(&toptions, BAUDRATE);
 
-    // toptions.c_cflag &= ~HUPCL; // disable hang-up-on-close to avoid reset
-    //toptions.c_cflag |= CREAD | CLOCAL;  // turn on READ & ignore ctrl lines
-    toptions.c_iflag &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl
+	toptions.c_cc[VMIN]  = 8; // assuming 6 numbers each 1 byte plus CR LF worst case
+	toptions.c_cc[VTIME] = 1; //  might be too big 1=0.1 seconds!	
+	
+   	if (tcsetattr(fd, TCSANOW, &toptions) <0) perror("tcsetaddr failed");
+	usleep(100000);
+	if (tcflush( fd, TCIOFLUSH) != 0) 	 perror("tcflush error");
+	
+	// no flow control
+	//toptions.c_cflag &= ~CRTSCTS;  //flow ctl
+
+    //toptions.c_cflag &= ~HUPCL; // disable hang-up-on-close to avoid reset
+    //toptions.c_cflag |= CREAD | CLOCAL ;  // turn on READ & ignore ctrl lines
+    //toptions.c_iflag &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl
     // No line processing:
     // echo off, echo newline off, canonical mode off, 
     // extended input processing off, signal chars off
-#ifdef STACIPPA
-    toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | IEXTEN | ISIG); // make raw
-    toptions.c_oflag &= ~OPOST; // make raw
+    //toptions.c_lflag &= ~(ICANON | ECHO | ECHOE |  ISIG); // make raw
+    //toptions.c_oflag &= ~OPOST; // make raw
+	/* Canonical mode */
+	//toptions.c_lflag |= ICANON;
 
     // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
-    toptions.c_cc[VMIN]  = 14; // assuming 6 numbers each 1 byte plus CR LF
-    toptions.c_cc[VTIME] = 1; // i might be too big 1=0.1 seconds!
-#endif
-    
-	/* commit the serial port settings */
-	tcsetattr(fd, TCSANOW, &toptions);
+    //toptions.c_cc[VMIN]  = 14; // assuming 6 numbers each 1 byte plus CR LF
+    //toptions.c_cc[VTIME] = 1; // i might be too big 1=0.1 seconds!
+    //if (tcflush( fd, TCIOFLUSH) != 0)  perror("tcflush error");
 
+    /* commit the serial port settings */
+	//tcsetattr(fd, TCSANOW, &toptions);
+
+	//if (tcflush( fd, TCIOFLUSH) != 0)  perror("tcflush error");
 	/* Send byte to trigger Arduino to send string back */
 	// write(fd, "0", 1);
 	/* Receive string from Arduino */
@@ -95,33 +106,24 @@ bool Serial::Open(const string& serialName)
 	/*
 	printf("%i bytes read, buffer contains: %s\n", n, buf);
 
-	if (DEBUG)
-	{
+	if (DEBUG)	{
 		printf("Printing individual characters in buf as integers...\n\n");
-		for (i = 0; i < n; i++)
-		{
+		for (i = 0; i < n; i++)	{
 			printf("Byte %i:%i, ", i + 1, (int) buf[i]);
 		}
 		printf("\n");
 	}
 */
 
-	//is it set as we asked for?
-	// struct termios toptionVerif;
-	// tcgetattr(fd, &toptionVerif);
+//  is it set as we asked for?
+//	struct termios toptionVerif;
+//	tcgetattr(fd, &toptionVerif);
 //	if ( StructComparator( toptions, toptionVerif) == 0)
 //		cout << "Damn! i told you attributes where messed up!" << endl;
+//  assert(memcmp(&toptions, &toptionVerif, sizeof(toptions)) == 0);
 
-	// assert(memcmp(&toptions, &toptionVerif, sizeof(toptions)) == 0);
-
-	// se flushi NON VA PIU' UN CAZZO (su arduino di aaron, in emulazione protocollo)
-
-	/*
-	if (tcflush( fd, TCIOFLUSH) != 0) 
-		 perror("tcflush error");
-	*/
-
-	// usleep(2000000);
+//	if (tcdrain( fd) != 0)
+//		 perror("tcdrain error");
 
 	return true;
 }
@@ -129,13 +131,6 @@ bool Serial::Open(const string& serialName)
 Serial::~Serial()
 {
 	// TODO Auto-generated destructor stub
-	if (tcflush( fd, TCIOFLUSH) != 0)
-		 perror("tcflush error");
-	close(fd);
-}
-
-void Serial::Close()
-{
 	if (tcflush( fd, TCIOFLUSH) != 0)
 		 perror("tcflush error");
 	close(fd);
@@ -156,7 +151,7 @@ int Serial::Write(const void* buf, size_t len)
     int written = ::write(fd, buf, len);
 	// senza queste sleep si incarta tutto
 	// usleep(240000);
-	return (written == len);
+    return (written == len);
 }
 
 
@@ -171,10 +166,10 @@ string Serial::ReadLine(void)
         return "";   // strcpy(readBuffer, "Bad tty plutopaperino\r\nilrestod");
     }
 
-    int nread = ::read(fd, readBuffer, 64);
+    int nread = ::read(fd, readBuffer, 80);
     string newRead;
     if(nread == -1)   {
-    	cout << "Reading error: " << strerror( errno ) << endl;  // something went wrong....
+    	// cout << "Reading error: " << strerror( errno ) << endl;  // something went wrong....
     	return "";
     } else if (nread == 0) {
     	return "";
@@ -187,7 +182,7 @@ string Serial::ReadLine(void)
 
     // c'e' un cippa di terminatore? cerco \r\n, ovvero 13 10
     std::string::size_type found = readString.find("\r\n");
-//    cout <<  found << readString.size() << endl;
+    //    cout <<  found << readString.size() << endl;
 
     string toReturn;
     if (found != std::string::npos)  // i have a good line available
@@ -200,7 +195,7 @@ string Serial::ReadLine(void)
 
     if(readString.length() > 2048)
     {
-    	// cout << "buffer too long, resetting.." << endl;
+    	cout << "buffer too long, resetting.." << endl;
     	toReturn = "buffer too long, resetting..";
     	readString.clear();
     }
