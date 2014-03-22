@@ -1,4 +1,5 @@
-<<<<<<< HEAD
+# <<<<<<< HEAD
+
 # F DL <F limit>  max force difference
 # F LL <F limit> max sum of pressures on both ch
 # P DF <value>  max distance across platforms
@@ -34,7 +35,7 @@ F LL 400
 # S X
 # 0 P 15 1
 # 1 P 15 1
-=======
+# =======
 
 # possibile bella idea, la mettiamo via
 #trigger <nome> <stato> <canale> <condizione> <azione>
@@ -65,5 +66,5 @@ S X
 1 P 200 10
 
 
->>>>>>> a33c926... fix baco blocco comandi sull' 'altro' canale
+# >>>>>>> a33c926... fix baco blocco comandi sull' 'altro' canale
 # S X questo e' generato automaticamente (ci vuole sempre)
