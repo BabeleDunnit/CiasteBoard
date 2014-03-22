@@ -9,13 +9,35 @@
     "conversion": 
     {
     		// moltiplicatore per trasformare i valori di posizione e forza 
-    		// dai valori scritti nel programma lato host
-    		// ai valori passati ad arduino
-    		// int arduinoPosition = position_ * positionCommandPositionConversionFactor;
-			// int arduinoForce = maxForceToGetToPosition_ * positionCommandForceConversionFactor;
-    		
+    		// dai valori scritti nel programma lato host ai valori passati ad arduino
 	    	"positionFactor" : 1.0,
-	    	"forceFactor" : 1.0
+	    	"forceFactor" : 1.0,
+	    	"0InputForceMin" : 0,
+	    	"0InputForceMax" : 920,
+	    	"0PhysForceMin"  : 0,
+	    	"0PhysForceMax"  : 850,
+	    	"0OutForceMin"   : 0,
+	    	"0OutForceMax"   : 999,
+	    	"1InputForceMin" : 0,
+	    	"1InputForceMax" : 1080,
+	    	"1PhysForceMin"  : 0,
+	    	"1PhysForceMax"  : 850,
+	    	"1OutForceMin"   : 0,
+	    	"1OutForceMax"   : 999,
+	    	"0InputPosMin"  : 222,
+	    	"0InputPosMax"  : 4095,
+	    	"0PhysPosMin"   : 0,
+	    	"0PhysPosMax"   : 200,
+	    	"0OutPosMin"    : 0,
+	    	"0OutPosMax"    : 999,
+	    	// OKKIO che i loro sensori sono invertiti....min 4096 max 0
+	    	"1InputPosMin"  : 350,
+	    	"1InputPosMax"  : 4095,
+	    	"1PhysPosMin"   : 0,
+	    	"1PhysPosMax"   : 200,
+	    	"1OutPosMin"    : 0,
+	    	"1OutPosMax"    : 999
+    
     }
     
     

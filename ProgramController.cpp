@@ -10,12 +10,15 @@
 #include "Commands.h"
 #include "Footboard.h"
 
+
 ProgramController::ProgramController() :
 		running(true), programCounter(0), loopCount(0)
 {
 	loopTime = lastLogArduinoDataTime = boost::posix_time::microsec_clock::local_time();
-	samplingLogFile.open("sampling.log");
-	completeLogFile.open("complete.log");
+	const char * sampling = logNameGen("sampl").c_str();
+	const char * detail = logNameGen("detail").c_str();
+	samplingLogFile.open(sampling, std::ios_base::app);
+	completeLogFile.open(detail, std::ios_base::app);
 	claxon.reset(new Sound("claxon.wav"));
 }
 
@@ -23,8 +26,24 @@ ProgramController::~ProgramController()
 {
 	samplingLogFile.close();
 	completeLogFile.close();
-	cout << "ProgramController dtor" << endl;
+	cout << "ProgramController terminated" << endl;
 }
+
+string ProgramController::logNameGen(string prefisso)
+{
+	time_t now;
+	char the_date[MAX_DATE];
+	the_date[0] = '\0';
+	now = time(NULL);
+
+	if (now != -1)
+		strftime(the_date, MAX_DATE, "%Y_%m_%d", localtime(&now));  //could use gmtime(0)
+	string middle( the_date);
+	string ret;
+	ret = prefisso + middle + ".txt";
+	return ret;
+}
+
 
 bool ProgramController::Run(void)
 {

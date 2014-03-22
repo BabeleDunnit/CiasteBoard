@@ -14,12 +14,17 @@
 #include "Sound.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
+// using namespace boost::date_time;
 using namespace boost::posix_time;
 
 #include <boost/enable_shared_from_this.hpp>
 
+#define MAX_DATE 12
+
 class ProgramController : public enable_shared_from_this<ProgramController>
 {
+private:
+	string logNameGen(string);
 public:
     ProgramController();
     virtual ~ProgramController();

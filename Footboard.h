@@ -44,6 +44,7 @@ public:
 
 	bool Accept(shared_ptr<Command>);
 
+
 	Serial serial;
 
 	// only for debug purposes
@@ -64,6 +65,14 @@ public:
 	// int arduinoForce = maxForceToGetToPosition_ * positionCommandForceConversionFactor;
     float positionConversionFactor;
     float forceConversionFactor;
+    float ForceIn2Phys_K[2];
+    float ForceIn2Phys_Offset[2];
+    float ForcePhys2Out_K[2];
+    float ForcePhys2Out_Offset[2];
+    float PosIn2Phys_K[2];
+    float PosIn2Phys_Offset[2];
+    float PosPhys2Out_K[2];
+    float PosPhys2Out_Offset[2];
 
     shared_ptr<ProgramController> programController;
 };

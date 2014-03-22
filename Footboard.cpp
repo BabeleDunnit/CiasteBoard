@@ -14,6 +14,8 @@ using namespace boost;
 #include "ProgramController.h"
 #include "Commands.h"
 
+#define TOT_CH 2
+
 Footboard::Footboard(shared_ptr<ProgramController> pc) :
 		programController(pc)
 {
@@ -23,9 +25,99 @@ Footboard::Footboard(shared_ptr<ProgramController> pc) :
 	positionConversionFactor = programController->parser->options.get<float>("conversion.positionFactor");
 	forceConversionFactor = programController->parser->options.get<float>("conversion.forceFactor");
 
+	ForceIn2Phys_K[0] = (
+		programController->parser->options.get<float>("conversion.0PhysForceMax") -
+		programController->parser->options.get<float>("conversion.0PhysForceMin")) /
+		(programController->parser->options.get<float>("conversion.0InputForceMax") -
+		 programController->parser->options.get<float>("conversion.0InputForceMin"));
+	ForceIn2Phys_K[1] = (
+		programController->parser->options.get<float>("conversion.1PhysForceMax") -
+		programController->parser->options.get<float>("conversion.1PhysForceMin")) /
+		(programController->parser->options.get<float>("conversion.1InputForceMax") -
+		 programController->parser->options.get<float>("conversion.1InputForceMin"));
+
+	ForceIn2Phys_Offset[0] = programController->parser->options.get<float>("conversion.0PhysForceMin")-
+			programController->parser->options.get<float>("conversion.0InputForceMin") * ForceIn2Phys_K[0];
+	ForceIn2Phys_Offset[1] = programController->parser->options.get<float>("conversion.1PhysForceMin")-
+			programController->parser->options.get<float>("conversion.1InputForceMin") * ForceIn2Phys_K[1];
+
+	ForcePhys2Out_K[0] = (
+		programController->parser->options.get<float>("conversion.0OutForceMax") -
+		programController->parser->options.get<float>("conversion.0OutForceMin")) /
+		(programController->parser->options.get<float>("conversion.0PhysForceMax") -
+		 programController->parser->options.get<float>("conversion.0PhysForceMin"));
+    ForcePhys2Out_K[1] = (
+		programController->parser->options.get<float>("conversion.1OutForceMax") -
+		programController->parser->options.get<float>("conversion.1OutForceMin")) /
+		(programController->parser->options.get<float>("conversion.1PhysForceMax") -
+		 programController->parser->options.get<float>("conversion.1PhysForceMin"));
+
+	ForcePhys2Out_Offset[0] = programController->parser->options.get<float>("conversion.0OutForceMin") -
+		programController->parser->options.get<float>("conversion.0PhysForceMin") * ForcePhys2Out_K[0];
+	ForcePhys2Out_Offset[1] = programController->parser->options.get<float>("conversion.1OutForceMin")-
+		programController->parser->options.get<float>("conversion.1PhysForceMin") * ForcePhys2Out_K[1];
+
+// and now position calib
+	PosIn2Phys_K[0] = (
+		programController->parser->options.get<float>("conversion.0PhysPosMax") -
+		programController->parser->options.get<float>("conversion.0PhysPosMin")) /
+		(programController->parser->options.get<float>("conversion.0InputPosMax") -
+		 programController->parser->options.get<float>("conversion.0InputPosMin"));
+	PosIn2Phys_K[1] = (
+		programController->parser->options.get<float>("conversion.1PhysPosMax") -
+		programController->parser->options.get<float>("conversion.1PhysPosMin")) /
+		(programController->parser->options.get<float>("conversion.1InputPosMax") -
+		 programController->parser->options.get<float>("conversion.1InputPosMin"));
+
+	PosIn2Phys_Offset[0] = programController->parser->options.get<float>("conversion.0PhysPosMin")-
+			programController->parser->options.get<float>("conversion.0InputPosMin") * PosIn2Phys_K[0];
+	PosIn2Phys_Offset[1] = programController->parser->options.get<float>("conversion.1PhysPosMin")-
+			programController->parser->options.get<float>("conversion.1InputPosMin") * PosIn2Phys_K[1];
+
+	PosPhys2Out_K[0] = (
+		programController->parser->options.get<float>("conversion.0OutPosMax") -
+		programController->parser->options.get<float>("conversion.0OutPosMin")) /
+		(programController->parser->options.get<float>("conversion.0PhysPosMax") -
+		 programController->parser->options.get<float>("conversion.0PhysPosMin"));
+    PosPhys2Out_K[1] = (
+		programController->parser->options.get<float>("conversion.1OutPosMax") -
+		programController->parser->options.get<float>("conversion.1OutPosMin")) /
+		(programController->parser->options.get<float>("conversion.1PhysPosMax") -
+		 programController->parser->options.get<float>("conversion.1PhysPosMin"));
+
+	PosPhys2Out_Offset[0] = programController->parser->options.get<float>("conversion.0OutPosMin") -
+		programController->parser->options.get<float>("conversion.0PhysPosMin") * PosPhys2Out_K[0];
+	PosPhys2Out_Offset[1] = programController->parser->options.get<float>("conversion.1OutPosMin")-
+		programController->parser->options.get<float>("conversion.1PhysPosMin") * PosPhys2Out_K[1];
+
+
 	// memset(readBuffer, 0, sizeof(readBuffer));
 	//memset(states, 0, sizeof(ArduinoState) * 2);
-	states.resize(2);
+	states.resize(TOT_CH);
+
+	for (int i = 0; i < TOT_CH; ++i) {
+		char buffer[200];
+		programController->completeLogFile << "Conversion table for channel: " <<  i << endl;
+		sprintf(buffer, "F In K: %2.3f   F In Offset: %2.3f   F Out K: %2.3f   F Out Offset: %2.3f",
+				ForceIn2Phys_K[i], ForceIn2Phys_Offset[i], ForcePhys2Out_K[i], ForcePhys2Out_Offset[i]  );
+
+		programController->completeLogFile << string(buffer) << "\\r\\n" << endl;
+		sprintf(buffer, "P In K: %2.3f   P In Offset: %2.3f   P Out K: %2.3f   P Out Offset: %2.3f",
+				PosIn2Phys_K[i], PosIn2Phys_Offset[i], PosPhys2Out_K[i], PosPhys2Out_Offset[i]  );
+
+		programController->completeLogFile << string(buffer) << "\\r\\n" << endl<<endl;
+
+/*perchecacchio non gli piace? puzzone!
+		string FConst = "F In K: " 	+  boost::lexical_cast<std::string>(ForceIn2Phys_K[i]) ;
+				" F In Offset: " 	+ lexical_cast<string>(ForceIn2Phys_Offset[i]) +
+				" F Out K: " 		+ lexical_cast<string>(ForcePhys2Out_K[i]) +
+				" F Out Offset: " 	+ lexical_cast<string>(ForcePhys2Out_Offset[i]) +
+				" P In K: "  		+ lexical_cast<string>(PosIn2Phys_K[i])    +
+				" P In Offset: "  	+ lexical_cast<string>(PosIn2Phys_Offset[i]) +
+				" P Out K: " 		+ lexical_cast<string>(PosPhys2Out_K[i])   +
+				" P Out K: " 		+ lexical_cast<string>(PosPhys2Out_Offset[i]);
+*/
+	}
 
 }
 
@@ -33,107 +125,12 @@ Footboard::~Footboard()
 {
 }
 
-#ifdef VECCHIO_ERRORIDILETTURA
-bool Footboard::GetStateFromArduino(void)
-{
-	int len = serial.Read(readBuffer, 64);
-	readBuffer[len] = 0;
 
-	if(len <= 1)
-	{
-	    // timeout
-        strcpy(errorReadBuffer, "NOT a buffer dump! :) arduino->host serial timeout");
-	    return false;
-	}
-
-	if(readBuffer[0] != '0' && readBuffer[0] != '1')
-	{
-	    cout << "message from arduino: <" << readBuffer << ">" << endl;
-	    return true;
-	}
-
-    assert(readBuffer[0] == '0' || readBuffer[0] == '1' );
-
-	int channel = -1, force = -1, position = -1, pid = -1, ef = -1, epos = -1;
-	// sscanf(readBuffer, "%d %d %d", &channel, &force, &position);
-	sscanf(readBuffer, "%d %d %d %d %d %d", &channel, &force, &position, &pid, &ef, &epos);
-
-	// cout << state.channel << state.force << state.position << endl;
-
-	// vediamo se e' valida la lettura
-	/*
-	if (channel != 0 && channel != 1)
-		return false;
-
-	if (force < MINFORCEVALUE || force > MAXFORCEVALUE)
-		return false;
-
-	if (position < MINPOSITIONVALUE || position > MAXPOSITIONVALUE)
-		return false;
-		*/
-
-	// salvo i dati solo per stamparli ogni tanto, il flusso vero e' quello che entra negli attuatori
-	/*
-	 ArduinoState state;
-	 state.channel = channel;
-	 state.force = force;
-	 state.position = position;
-	 state.pid = pid;
-	 state.ef = ef;
-	 state.epos = epos;
-	 states.push_back(state);
-	 */
-
-	// e' comunque successo qualche casino nella scanf? possibile??
-	if(channel != 0 && channel != 1)
-	{
-	    // cout << "Error receiving Arduino data - abort read" << endl;
-
-	    strncpy(errorReadBuffer, readBuffer, 64);
-	    errorReadBuffer[63] = 0;
-
-	    states[0].channel = -1;
-        states[0].force = -1;
-        states[0].position = -1;
-        states[0].pid = -1;
-        states[0].ef = -1;
-        states[0].epos = -1;
-
-        states[1].channel = -1;
-        states[1].force = -1;
-        states[1].position = -1;
-        states[1].pid = -1;
-        states[1].ef = -1;
-        states[1].epos = -1;
-
-        return false;
-	}
-
-	states[channel].channel = channel;
-	states[channel].force = force;
-	states[channel].position = position;
-	states[channel].pid = pid;
-	states[channel].ef = ef;
-	states[channel].epos = epos;
-
-	//actuators[channel].AddState(force, position);
-
-//	int sum = 0;
-//	assert(states.size() == 128);
-//	for(circular_buffer<ArduinoState>::iterator i = states.begin(); i != states.end(); ++i)
-//	{
-//		sum += i->force;
-//	}
-//
-//	cout << "media1 " << sum / 128.0 << endl;
-
-	return true;
-}
-#endif
 
 
 int Footboard::GetStateFromArduino(void)
 {
+// AAA Attenzione! per qualche motivo un baudrate erroneo mi ritorna tutti zero senza dare errore!
     string line = serial.ReadLine();
 
     if(line.empty())
@@ -142,6 +139,8 @@ int Footboard::GetStateFromArduino(void)
     if(line[0] != '0' && line[0] != '1')
     {
         cout << "--- Debug Msg: <" << line << ">" << endl;
+    	programController->samplingLogFile << line << "\\r\\n" << endl;
+    	programController->completeLogFile << line << "\\r\\n" << endl;
         return 2;
     }
 
@@ -178,8 +177,8 @@ int Footboard::GetStateFromArduino(void)
     }
 
     states[channel].channel = channel;
-    states[channel].force = force;
-    states[channel].position = position;
+    states[channel].force = (int) force * ForceIn2Phys_K[channel]+ ForceIn2Phys_Offset[0];
+    states[channel].position = (int) position * PosIn2Phys_K[channel] + PosIn2Phys_Offset[channel];
     states[channel].pid = pid;
     states[channel].ef = ef;
     states[channel].epos = epos;
@@ -193,18 +192,20 @@ char arduinoCommandBuffer[64];
 
 bool Footboard::SendForceCommandToArduino(const int& channel, const int& force, const int& maxForce)
 {
-	int arduinoForce = force * forceConversionFactor;
-	int arduinoMaxForce = maxForce * forceConversionFactor;
+	int arduinoForce = int( 0.5 + forceConversionFactor * ( force * ForcePhys2Out_K[channel] + ForcePhys2Out_Offset[channel] ));
+	int arduinoMaxForce = maxForce;
+	//	int arduinoMaxForce = int (0.5 + forceConversionFactor * (maxForce * ForcePhys2Out_K[channel] + ForcePhys2Out_Offset[channel] ));
 
-	if (arduinoForce < -999 || arduinoForce > 999 || arduinoMaxForce < -99 || arduinoMaxForce > 99)
+	if (arduinoForce < 1 || arduinoForce > 999 || arduinoMaxForce < 0 || arduinoMaxForce > 99)
 	{
-		cout << "warn: force command params out of bounds" << endl;
-		cout << "will NOT send command to Arduino" << endl;
+		cout << "warn: force command params out of bounds will NOT send command to Arduino" << endl;
+		cout << "force received = " << force    << "  force converted = " << arduinoForce << endl;
+		cout << "Max f received = " << maxForce << "  Max f converted = " << arduinoMaxForce << endl;
 		return false;
 	}
 
 	// char buf[64];
-	sprintf(arduinoCommandBuffer, "%1d %03d %02d\r\n", channel, force, maxForce);
+	sprintf(arduinoCommandBuffer, "%1d %03d %02d\r\n", channel, (int) arduinoForce, (int) arduinoMaxForce);
 
 	string command(arduinoCommandBuffer);
 	trim_right(command);
@@ -225,18 +226,22 @@ bool Footboard::SendForceCommandToArduino(const int& channel, const int& force, 
 bool Footboard::SendPositionCommandToArduino(const int& channel_, const int& position_,
 		const int& maxForceToGetToPosition_)
 {
-	int arduinoPosition = position_ * positionConversionFactor;
-	int arduinoForce = maxForceToGetToPosition_ * forceConversionFactor;
+	int arduinoPosition = int (0.5 + positionConversionFactor *
+			(position_ * PosPhys2Out_K[channel_] + PosPhys2Out_Offset[channel_]));
+	//int arduinoForce =  int (0.5 + forceConversionFactor *
+	//		( maxForceToGetToPosition_ * ForcePhys2Out_K[channel_] + ForcePhys2Out_Offset[channel_]));
 
-	if (arduinoPosition < 0 || arduinoPosition > 999 || arduinoForce < -99 || arduinoForce > 99)
+	int arduinoForce = maxForceToGetToPosition_;
+
+	if (arduinoPosition < 0 || arduinoPosition > 999 || arduinoForce < 0 || arduinoForce > 99)
 	{
-		cout << "warn: position command params out of bounds after conversion: pos:" << arduinoPosition << " force:"
-				<< arduinoForce << endl;
-		cout << "will NOT send command to Arduino" << endl;
-		return false;
+			cout << "warn: position command params out of bounds: will NOT send command to Arduino" << endl;
+			cout << "position received = " << position_    <<   		"   position converted = " << arduinoPosition << endl;
+			cout << "Max f received = "   << maxForceToGetToPosition_ <<	"  Max f converted = " << arduinoForce << endl;
+			return false;
 	}
 
-	sprintf(arduinoCommandBuffer, "P %1d %03d %02d\r\n", channel_, arduinoPosition, arduinoForce);
+	sprintf(arduinoCommandBuffer, "P %1d %03d %02d\r\n", channel_, (int) arduinoPosition, (int) arduinoForce);
 
 	// riformatto un pelo, evito eoln multipli
 	string command(arduinoCommandBuffer);
@@ -256,9 +261,17 @@ bool Footboard::SendPositionCommandToArduino(const int& channel_, const int& pos
 bool Footboard::Accept(shared_ptr<Command> c)
 {
 	int channel = c->GetChannel();
+
+//	cout << "Evaluating cmd: " << c->AsString() << " Channel: " << channel << endl;
+
 	if (channel != -1)
 	{
-		return actuators[channel].Accept(c);
+		actuators[(channel+1)%2].IsCommandExpired();  //prova di luca
+		bool ret = actuators[channel].Accept(c);
+		if (ret == true)
+			programController->completeLogFile << "\n----- command start -----\n" << "Actuator is accepting command: "
+					<< c->AsString() << " (line: " << c->lineNumber << ")" << endl;
+		return ret;
 	}
 
 	// se arriviamo qui e' un comando per la footboard
@@ -269,7 +282,8 @@ bool Footboard::Accept(shared_ptr<Command> c)
 	// sui diversi canali. In verita' trae un po' in inganno, perche' i semafori non "fanno" nulla,
 	// ma semplicemente bloccano fino a quando non sono expired. Questo implica che CI VUOLE SEMPRE
 	// un S X alla fine del programma
-	if (c->IsExpired())
+//	cout << "Command: Expired status is: " << c-> IsExpired() << endl;
+ 	if (c->IsExpired())
 	{
 		cout << "\n----- command start -----\n" << "Footboard is accepting command: " << c->AsString()
 		<< " (line: " << c->lineNumber << ")" << endl;

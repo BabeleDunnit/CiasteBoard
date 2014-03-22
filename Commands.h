@@ -99,6 +99,7 @@ struct PositionCommand: public Command
 	int channel;
 	int position;
 	int timeLimit;
+	bool BeepedUp;
 
 
 };
@@ -125,9 +126,14 @@ struct PositionWithMaxForceCommand: PositionCommand
 
 struct ForceCommand: public PositionCommand
 {
+	bool BeepedUp;
+	bool BeepedDown;
+
 	ForceCommand(const int& c, const int& f, const int&p, const int& tl) :
 			PositionCommand(c, p, tl), force(f), seekDirection(0)
 	{
+		BeepedUp   = false;
+		BeepedDown = false;
 	}
 
 	virtual string AsString(void)
@@ -139,6 +145,7 @@ struct ForceCommand: public PositionCommand
 	}
 
 	virtual bool IsExpired(void);
+	// virtual bool Execute(void);
     virtual void OnAccept(void);
 
 	bool IsPositionReached(void);
@@ -147,6 +154,9 @@ struct ForceCommand: public PositionCommand
 
 	int seekDirection; // positive if we are expected to get at higher pos value
 };
+
+
+
 
 struct ForceWithDeltaCommand: public ForceCommand
 {
@@ -184,6 +194,8 @@ struct SemaphoreCommand: public Command
 	string mode;
     bool isExpired0;
     bool isExpired1;
+
+
 };
 
 
